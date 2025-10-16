@@ -17,3 +17,5 @@ Thumbs.db
 
 # Env
 .env
+# 日志目录
+logs/

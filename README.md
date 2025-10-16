@@ -38,6 +38,15 @@ make test   # 运行单元测试
 make lint   # 执行 Maven verify（跳过测试）
 ```
 
+### 5. 日志输出
+
+- 应用默认使用 Logback，将日志写入 `logs/spring-ai-alibaba-demo.log`，并按天/50MB 滚动备份至 `logs/archive/`。
+- 可通过环境变量 `LOG_HOME` 自定义日志目录，例如：
+
+```bash
+LOG_HOME=/var/log/spring-ai-alibaba make run
+```
+
 ## 项目结构
 
 ```
@@ -49,7 +58,9 @@ make lint   # 执行 Maven verify（跳过测试）
 │   │   ├── java/com/example/springaialibaba
 │   │   │   ├── SpringAiAlibabaApplication.java
 │   │   │   └── controller/ChatController.java
-│   │   └── resources/application.yml
+│   │   └── resources/
+│   │       ├── application.yml
+│   │       └── logback-spring.xml
 │   └── test
 │       └── java/com/example/springaialibaba/SpringAiAlibabaApplicationTests.java
 ```
