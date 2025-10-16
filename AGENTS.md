@@ -1,30 +1,23 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Keep the repository root minimal: docs such as `README.md` and `AGENTS.md` stay in place, while runtime code lives under `src/`.
-- Group agent logic inside `src/agents/`, shared utilities under `src/shared/`, and integration adapters in `src/tools/`; mirror this layout inside `tests/` (for example, `tests/agents/test_scheduler.py`).
-- Store prompts, fixtures, and small data assets in `assets/` or `tests/fixtures/`. Large datasets belong in external storage referenced from documentation.
+Keep documentation (this file, `README.md`) in the root. Application code lives under `src/main/java/com/example/springaialibaba/`, configuration in `src/main/resources/`, and tests under `src/test/java/`. Place web endpoints in `controller/`, shared configuration (for example `ChatClientConfig.java`) in `config/`, and keep environment-dependent YAML or Logback updates in `application.yml` and `logback-spring.xml`. Generated or runtime artifacts such as `logs/` and `target/` stay out of version control.
 
 ## Build, Test, and Development Commands
-- Provide a thin automation layer (Makefile or Justfile) that surfaces `make setup`, `make lint`, `make test`, and `make run`. Treat these as the stable interface for contributors.
-- `make setup` should install/update dependencies in an isolated environment (Python: `uv tool install` or `pip install -r requirements.txt`). `make run` invokes the main entry point, e.g., `python -m src.main`.
-- When adding bespoke scripts, place them in `scripts/` and call them from the Make targets so developers have a single entry point.
+`make setup` primes Maven dependencies (`mvn -B dependency:go-offline`).  
+`make lint` runs `mvn -B -DskipTests verify` for compilation and static analysis.  
+`make test` executes the JUnit test suite (`mvn test`).  
+`make run` launches the Spring Boot app via `mvn spring-boot:run`.  
+Set `DASHSCOPE_API_KEY` (and optionally `LOG_HOME`) before running to enable DashScope access and custom log directories.
 
 ## Coding Style & Naming Conventions
-- Default to 4-space indentation and Black/PEP 8 alignment for Python modules. Configure formatters and linters in `pyproject.toml` at the repo root.
-- Use snake_case for modules and functions (`task_router.py`, `route_task()`), CamelCase for classes (`TaskRouter`), and ALL_CAPS for constants.
-- Run `ruff format && ruff check` before committing; extend `.ruff.toml` alongside new rules rather than inlining disables.
+Target Java 17 syntax, keep 4-space indentation, and rely on IDE or Maven formatting to avoid wildcard imports. Packages remain lowercase (`com.example.springaialibaba`), classes use PascalCase (`ChatController`), methods and fields use lowerCamelCase, and constants are SCREAMING_SNAKE_CASE. Use SLF4J (`LoggerFactory`) for logging; avoid `System.out` in production paths. New configuration beans should live under `config/` to maintain discoverability.
 
 ## Testing Guidelines
-- Rely on `pytest` for unit and integration coverage. Keep tests colocated with their subject area (`tests/tools/test_slack_adapter.py` ↔ `src/tools/slack_adapter.py`).
-- Target ≥80 % statement coverage; surface coverage deltas in PRs with `pytest --cov=src --cov-report=term-missing`.
-- Mark slow or external-dependent tests with `@pytest.mark.slow` so they can be excluded locally via `pytest -m "not slow"`.
+Write unit and slice tests with JUnit 5 under `src/test/java`, mirroring package paths (`SpringAiAlibabaApplicationTests` covers context loads). Run `make test` locally before pushing. If adding integration coverage, tag slow or external DashScope calls with `@Tag("slow")` so they can be excluded via `mvn test -Dgroups=!slow`. Aim to leave the suite deterministic; mock external services where possible.
 
 ## Commit & Pull Request Guidelines
-- Write commits in the imperative mood (`Add vector store client`) and keep them scoped; use optional prefixes (`feat:`, `fix:`) when they add clarity.
-- PR descriptions should cover problem, solution, and verification steps; link issues using `Fixes #<id>` and attach screenshots or logs for UX/CLI changes.
-- Request reviews once CI passes and note any follow-up tasks or known gaps explicitly.
+Follow the existing history: short, imperative commit subjects with optional prefixes (`feat: 引入 Logback 日志配置`). Each PR should describe the problem, summarize the solution, note verification (`make test`, manual curl, etc.), and link issues (e.g., `Fixes #123`). Include log excerpts or screenshots when altering CLI or API behaviour. Ensure CI passes before requesting review and call out follow-up work if any.
 
 ## Security & Configuration Tips
-- Never commit secrets; load sensitive values from `.env` files (ignored via `.gitignore`) and access them through a config helper such as `src/config.py`.
-- Pin third-party packages in `requirements.txt` (or equivalent lockfile) and audit dependency updates quarterly, documenting any risky changes in the PR.
+Never commit real DashScope keys. Externalize secrets via environment variables or `.env` (already ignored). Keep dependency versions pinned in `pom.xml` and review transitive upgrades. Default logging writes to `logs/spring-ai-alibaba-demo.log`; rotate or relocate via `LOG_HOME` in production environments. For additional configuration, prefer Spring Boot profiles over hard-coded values.
