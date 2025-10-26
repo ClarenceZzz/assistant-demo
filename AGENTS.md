@@ -117,10 +117,10 @@
 
 ### 5. 代码审查流程 (Pull Request)
 
-1.  **确保你开始工作时没有处在主分支上，否则拒绝执行任务**。
+1.  **确保你开始工作时没有处在主分支（main、develop）上，否则拒绝执行任务**。
 2.  完成开发和测试后，确保所有本地测试通过 (`mvn clean verify` 或 `gradle build`)。
 3.  向 `develop` 分支发起一个 **Pull Request (PR)**。
-4.  **PR 描述模板**:
+4.  **提交或 PR 描述模板**:
     ```markdown
     ### 1. 本次变更解决了什么问题？
     (简要描述背景和目标，关联 Jira/GitHub Issue ID)
