@@ -1,6 +1,14 @@
 spring:
   application:
     name: spring-ai-alibaba-demo
+  datasource:
+    url: jdbc:postgresql://${PGVECTOR_HOST:localhost}:${PGVECTOR_PORT:5432}/test
+    username: ${PGVECTOR_USERNAME:postgres}
+    password: ${PGVECTOR_PASSWORD:zAzHHplnxXb7QvT02QMl0oPV}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: never
   ai:
     dashscope:
       api-key: ${DASHSCOPE_API_KEY:}
@@ -8,6 +16,14 @@ spring:
         options:
           model: qwen-plus
           temperature: 0.8
+      embedding:
+        enabled: false
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
 
 server:
   port: 8080

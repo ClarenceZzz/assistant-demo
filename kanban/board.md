@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T1-1-setup-spring-ai-project
 - T1-2-implement-embedding-client
 - T1-3-implement-rerank-client
 - T1-4-implement-chat-client
@@ -29,4 +28,4 @@
 - _None_
 
 ## Done
-- _None_
+- T1-1-setup-spring-ai-project
