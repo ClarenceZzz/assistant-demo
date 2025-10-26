@@ -24,6 +24,12 @@ spring:
         index-type: HNSW
         distance-type: COSINE_DISTANCE
         dimensions: 1536
+    siliconflow:
+      api-url: ${SILICONFLOW_API_URL:https://api.siliconflow.cn/v1/embeddings}
+      api-key: ${SILICONFLOW_API_KEY:sk-fvkljvsojrgknsnqftkpnjoxfqvjijitspsvalywcfblvhim}
+      model: ${SILICONFLOW_EMBEDDING_MODEL:Qwen/Qwen3-Embedding-8B}
+      encoding-format: ${SILICONFLOW_EMBEDDING_ENCODING:float}
+      dimensions: ${SILICONFLOW_EMBEDDING_DIMENSIONS:1536}
 
 server:
   port: 8080

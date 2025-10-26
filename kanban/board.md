@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T1-2-implement-embedding-client
 - T1-3-implement-rerank-client
 - T1-4-implement-chat-client
 - T2-1-implement-vector-retrieval
@@ -19,7 +18,7 @@
 - _None_
 
 ## In Review
-- _None_
+- T1-2-implement-embedding-client
 
 ## Testing / QA
 - _None_

@@ -6,8 +6,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeEmbeddingAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.example.springaialibaba.embedding.siliconflow.SiliconFlowEmbeddingProperties;
 
 @SpringBootApplication(exclude = DashScopeEmbeddingAutoConfiguration.class)
+@EnableConfigurationProperties(SiliconFlowEmbeddingProperties.class)
 public class SpringAiAlibabaApplication {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiAlibabaApplication.class);
