@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+import com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeEmbeddingAutoConfiguration;
+
+@SpringBootApplication(exclude = DashScopeEmbeddingAutoConfiguration.class)
 public class SpringAiAlibabaApplication {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiAlibabaApplication.class);
