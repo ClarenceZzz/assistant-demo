@@ -31,7 +31,7 @@
     - `testSuccessfulRerank`: 模拟一个成功的 Rerank 响应，验证客户端能根据 `results` 正确地对输入文档列表进行排序。
     - `testRerankWithEmptyDocuments`: 验证当输入文档列表为空时，客户端能正常处理，不应调用 API。
     - `testApiFailureHandling`: 模拟一个 500 Internal Server Error，验证客户端的容错逻辑。
-- [ ] **集成测试**: 使用真实的查询和文档列表调用 API，验证端到端的功能。
+- [x] **集成测试**: 使用真实的查询和文档列表调用 API，验证端到端的功能。
 
 ## Related Files / Design Docs
 - `docs/api/rerank-api.md`
@@ -47,4 +47,5 @@
 - 2025-10-27: 任务转入 In Progress，开始实现 RerankClient 功能。
 - 2025-10-27: 完成 RerankClient 实现与配置，新增模型请求/响应类。
 - 2025-10-27: 执行 `mvn -Dtest=RerankClientTest test`，单元测试通过，等待代码评审。
+- 2025-10-27: 新增 `SiliconFlowRerankLiveTest`，提供真实接口冒烟验证。
 - 2025-10-27: 任务提交代码评审，状态移动至 In Review。
