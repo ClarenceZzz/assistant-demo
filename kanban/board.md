@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T1-4-implement-chat-client
 - T2-1-implement-vector-retrieval
 - T2-2-integrate-rerank-api
 - T3-1-implement-dynamic-prompt
@@ -18,6 +17,7 @@
 
 ## In Review
 - T1-3-implement-rerank-client
+- T1-4-implement-chat-client
 
 ## Testing / QA
 - _None_

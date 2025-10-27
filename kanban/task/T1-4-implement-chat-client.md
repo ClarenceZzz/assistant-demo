@@ -4,17 +4,17 @@
 创建一个自定义的 `GenericChatClient`，实现 Spring AI 的 `ChatModel` 接口。该客户端设计为可配置的，能够调用任何遵循 OpenAI API 格式的对话模型服务，为最终的问答生成提供支持。
 
 ## Subtasks
-- [ ] 创建 `GenericChatClient` 类，并使其实现 `org.springframework.ai.chat.model.ChatModel` 接口。
-- [ ] 在类中注入 `RestTemplate`，并从配置文件中读取 Chat API 的 URL (`spring.ai.generic-chat.api-url`) 和 API Key (`spring.ai.generic-chat.api-key`)。
-- [ ] 复用或创建与 OpenAI API 兼容的 POJO 类（如 `ChatCompletionRequest`, `ChatCompletionResponse`, `Message` 等）。
-- [ ] 实现核心的 `call(Prompt prompt)` 方法。
-- [ ] 在方法内部，将 Spring AI 的 `Prompt` 对象转换为符合 OpenAI 格式的 `ChatCompletionRequest`。这涉及到将 `Prompt` 中的指令（Instructions）映射到 `messages` 列表。
-- [ ] 设置 `Authorization` 和 `Content-Type` 请求头。
-- [ ] 使用 `RestTemplate` 发送 POST 请求。
-- [ ] 解析返回的 `ChatCompletionResponse`，提取生成的文本内容。
-- [ ] 将提取的内容包装成 Spring AI 的 `ChatResponse` 对象返回。
-- [ ] 实现错误处理逻辑，以应对 API 调用失败的情况。
-- [ ] 在配置中添加 `model` 名称 (`spring.ai.generic-chat.model`)，使其在构建请求时可动态配置。
+- [x] 创建 `GenericChatClient` 类，并使其实现 `org.springframework.ai.chat.model.ChatModel` 接口。
+- [x] 在类中注入 `RestTemplate`，并从配置文件中读取 Chat API 的 URL (`spring.ai.generic-chat.api-url`) 和 API Key (`spring.ai.generic-chat.api-key`)。
+- [x] 复用或创建与 OpenAI API 兼容的 POJO 类（如 `ChatCompletionRequest`, `ChatCompletionResponse`, `Message` 等）。
+- [x] 实现核心的 `call(Prompt prompt)` 方法。
+- [x] 在方法内部，将 Spring AI 的 `Prompt` 对象转换为符合 OpenAI 格式的 `ChatCompletionRequest`。这涉及到将 `Prompt` 中的指令（Instructions）映射到 `messages` 列表。
+- [x] 设置 `Authorization` 和 `Content-Type` 请求头。
+- [x] 使用 `RestTemplate` 发送 POST 请求。
+- [x] 解析返回的 `ChatCompletionResponse`，提取生成的文本内容。
+- [x] 将提取的内容包装成 Spring AI 的 `ChatResponse` 对象返回。
+- [x] 实现错误处理逻辑，以应对 API 调用失败的情况。
+- [x] 在配置中添加 `model` 名称 (`spring.ai.generic-chat.model`)，使其在构建请求时可动态配置。
 
 ## Developer
 - Owner: codex
@@ -28,10 +28,11 @@
 - API 调用失败时，客户端能抛出运行时异常。
 
 ## Test Cases
-- [ ] **单元测试**: 使用 `MockRestServiceServer` 模拟 Chat API。
+- [x] **单元测试**: 使用 `MockRestServiceServer` 模拟 Chat API。
     - `testSuccessfulChatCall`: 模拟一个成功的聊天响应，验证客户端能正确解析并返回 `ChatResponse`。
     - `testPromptToRequestConversion`: 验证 `Prompt` 对象被正确地转换成了 `ChatCompletionRequest` 的 `messages` 列表。
     - `testApiErrorHandling`: 模拟 API 返回错误，验证客户端的异常处理。
+- [x] **集成测试**: 新增冒烟测试类调用真实接口，验证端到端配置。
 
 ## Related Files / Design Docs
 - `docs/api/chat-api.md`
@@ -40,6 +41,9 @@
 - `T1-1-setup-spring-ai-project`
 
 ## QA
-
+- 待 QA 验证
 ## Notes & Updates
 - 2025-10-21: 任务创建。这是一个通用的对话客户端，为 RAG 的最后一步“生成”提供动力。其通用设计使其易于切换不同的后端 LLM 服务。
+- 2025-10-27: 任务转入 In Progress，开始实现 GenericChatClient。
+- 2025-10-27: 完成通用 Chat 客户端与配置，新增请求/响应模型及异常包装。
+- 2025-10-27: 完成单元测试 `GenericChatClientTest` 与集成冒烟测试 `GenericChatLiveTest`（需真实凭证运行）。

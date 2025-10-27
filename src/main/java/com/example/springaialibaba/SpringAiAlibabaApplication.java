@@ -8,11 +8,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeEmbeddingAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import com.example.springaialibaba.embedding.siliconflow.SiliconFlowEmbeddingProperties;
 import com.example.springaialibaba.rerank.siliconflow.SiliconFlowRerankProperties;
+import com.example.springaialibaba.embedding.siliconflow.SiliconFlowEmbeddingProperties;
+import com.example.springaialibaba.chat.generic.GenericChatProperties;
 
 @SpringBootApplication(exclude = DashScopeEmbeddingAutoConfiguration.class)
-@EnableConfigurationProperties({SiliconFlowEmbeddingProperties.class, SiliconFlowRerankProperties.class})
+@EnableConfigurationProperties({SiliconFlowEmbeddingProperties.class, SiliconFlowRerankProperties.class, GenericChatProperties.class})
 public class SpringAiAlibabaApplication {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiAlibabaApplication.class);
