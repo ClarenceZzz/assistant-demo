@@ -3,13 +3,12 @@ package com.example.springaialibaba.vectorstore;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,12 +31,13 @@ class PgVectorStoreIntegrationTest {
     private DataSource dataSource;
 
     @BeforeAll
-    void ensureDatabaseAvailable() throws SQLException {
+    void ensureDatabaseAvailable() {
         try (Connection connection = dataSource.getConnection()) {
             // 执行一次简单校验，确保连接可用
         }
-        catch (SQLException ex) {
-            Assumptions.assumeTrue(false, "PostgreSQL 未就绪，跳过 PgVector 集成测试: " + ex.getMessage());
+        catch (Exception ex) {
+            Assertions.fail("无法连接到测试数据库，请确认 application-test.yml 配置与 PostgreSQL 状态。错误信息: "
+                    + ex.getMessage(), ex);
         }
     }
 

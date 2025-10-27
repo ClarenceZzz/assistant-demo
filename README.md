@@ -38,7 +38,7 @@ make test   # 运行单元测试
 make lint   # 执行 Maven verify（跳过测试）
 ```
 
-- 集成测试依赖外部 PostgreSQL + pgvector 实例（默认读取 `application-test.yml`）。请确保本地或 CI 环境事先准备数据库，并在测试前创建扩展 `create extension if not exists vector;`。
+- 集成测试依赖外部 PostgreSQL + pgvector 实例（默认读取 `src/main/resources/application-test.yml`）。请确保本地或 CI 环境事先准备数据库，并在测试前创建扩展 `create extension if not exists vector;`。在 IDE 中运行 `@SpringBootTest` 亦会使用同一份配置，便于断点调试。
 
 ### 5. 日志输出
 
