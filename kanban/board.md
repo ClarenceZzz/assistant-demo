@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T2-1-implement-vector-retrieval
 - T2-2-integrate-rerank-api
 - T3-1-implement-dynamic-prompt
 - T3-2-implement-llm-generation-with-fallback
@@ -16,6 +15,7 @@
 - T1-2-implement-embedding-client
 
 ## In Review
+- T2-1-implement-vector-retrieval
 - T1-3-implement-rerank-client
 - T1-4-implement-chat-client
 
