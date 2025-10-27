@@ -47,3 +47,5 @@
 - 2025-10-26: 使用测试 API Key 启用集成测试 `SiliconFlowEmbeddingClientIT`，命令 `mvn -q test -Dsiliconflow.it.enabled=true` 通过。
 - 2025-10-27: 通过 GitHub MCP 尝试创建 PR，但由于认证失败未能提交，请求后续补充凭证后重试。
 - 2025-10-27: 凭证更新后再次使用 GitHub MCP 创建 PR（#2）成功，等待 Review。
+- 2025-10-27: 再次打开任务，补充 application-test.yml 中的测试密钥配置，并添加使用测试 profile 运行的数据库与 SiliconFlow 接口集成测试。
+- 2025-10-27: 尝试在本地运行 `mvn -q -Dtest=PostgresConnectivitySmokeTest test`，因环境缺少 PostgreSQL 服务导致初始化超时，待准备外部依赖后复测。
