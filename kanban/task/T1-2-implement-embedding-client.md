@@ -29,7 +29,7 @@
 - [x] **单元测试**: 使用 `MockRestServiceServer` 模拟 SiliconFlow API。
     - `testSuccessfulEmbedding`: 模拟一个 200 OK 响应，验证客户端能正确解析并返回 embedding 向量。（`SiliconFlowEmbeddingClientTest`）
     - `testApiErrorHandling`: 模拟一个 401 Unauthorized 响应，验证客户端是否会抛出预期的异常。（`SiliconFlowEmbeddingClientTest`）
-- [ ] **集成测试**: (标记为 `@Disabled` 或在特定 profile 下运行) 真实调用一次 SiliconFlow API，验证端到端的连通性。
+- [x] **集成测试**: `SiliconFlowEmbeddingClientIT` 依赖 `-Dsiliconflow.it.enabled=true` 与测试 API Key，真实调用 SiliconFlow API，验证端到端的连通性。
 
 ## Related Files / Design Docs
 - `docs/api/embedding-api.md` 
@@ -44,3 +44,6 @@
 - 2025-10-21: 任务创建。这是将外部模型集成到 Spring AI 生态的关键一步。
 - 2025-10-21: codex 开始开发，梳理 API 规范与现有嵌入模块结构。
 - 2025-10-26: codex 完成 SiliconFlow 客户端实现与单元测试，执行 `mvn -q test` 全量通过。
+- 2025-10-26: 使用测试 API Key 启用集成测试 `SiliconFlowEmbeddingClientIT`，命令 `mvn -q test -Dsiliconflow.it.enabled=true` 通过。
+- 2025-10-27: 通过 GitHub MCP 尝试创建 PR，但由于认证失败未能提交，请求后续补充凭证后重试。
+- 2025-10-27: 凭证更新后再次使用 GitHub MCP 创建 PR（#2）成功，等待 Review。
