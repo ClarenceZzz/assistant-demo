@@ -30,6 +30,21 @@ spring:
       model: ${SILICONFLOW_EMBEDDING_MODEL:Qwen/Qwen3-Embedding-8B}
       encoding-format: ${SILICONFLOW_EMBEDDING_ENCODING:float}
       dimensions: ${SILICONFLOW_EMBEDDING_DIMENSIONS:1536}
+    generic-chat:
+      api-url: ${GENERIC_CHAT_API_URL:https://api.siliconflow.cn/v1/chat/completions}
+      api-key: ${GENERIC_CHAT_API_KEY:}
+      model: ${GENERIC_CHAT_MODEL:deepseek-ai/DeepSeek-R1}
+      temperature: ${GENERIC_CHAT_TEMPERATURE:0.7}
+      top-p: ${GENERIC_CHAT_TOP_P:0.7}
+      top-k: ${GENERIC_CHAT_TOP_K:50}
+      max-tokens: ${GENERIC_CHAT_MAX_TOKENS:4096}
+      frequency-penalty: ${GENERIC_CHAT_FREQUENCY_PENALTY:0.0}
+      n: ${GENERIC_CHAT_N:1}
+      stream: ${GENERIC_CHAT_STREAM:false}
+      enable-thinking: ${GENERIC_CHAT_ENABLE_THINKING:false}
+      thinking-budget: ${GENERIC_CHAT_THINKING_BUDGET:4096}
+      connect-timeout: ${GENERIC_CHAT_CONNECT_TIMEOUT:PT10S}
+      read-timeout: ${GENERIC_CHAT_READ_TIMEOUT:PT30S}
 
 server:
   port: 8080
