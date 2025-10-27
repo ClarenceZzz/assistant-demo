@@ -39,3 +39,4 @@
 - 2025-10-21: 任务创建。此任务是 RAG 流程中“检索”步骤的直接实现。
 - 2025-02-14: 启动开发并实现基础检索服务和单元测试，等待代码评审。
 - 2025-02-14: 当前 Spring AI 版本未提供 `SearchRequest.query` 静态工厂方法，改用 `SearchRequest.builder()` 构建查询请求。
+- 2025-02-15: 根据评审意见新增 `RetrievalServiceIntegrationTest`，使用测试数据库验证真实检索流程。
