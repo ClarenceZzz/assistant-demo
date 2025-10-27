@@ -13,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -41,6 +42,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 /**
  * 通用的 OpenAI 兼容 Chat 客户端。
  */
+@Primary
 @Service
 public class GenericChatClient implements ChatModel {
 
