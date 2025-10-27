@@ -38,10 +38,7 @@ make test   # 运行单元测试
 make lint   # 执行 Maven verify（跳过测试）
 ```
 
-- 默认情况下，`PgVectorStoreIntegrationTest` 会自动检测 Docker。若未安装 Docker，该用例会被自动跳过；
-  - 如需强制依赖 Docker 容器运行，请设置 `-Dpgvector.test.mode=container`；
-  - 若本地已准备好带 pgvector 扩展的 PostgreSQL，可设置 `-Dpgvector.test.mode=external`（或 `PGVECTOR_TEST_MODE=external`）使用外部数据库；
-  - 设置为 `skip` 可显式跳过该测试：`-Dpgvector.test.mode=skip`。
+- 集成测试依赖外部 PostgreSQL + pgvector 实例（默认读取 `application-test.yml`）。请确保本地或 CI 环境事先准备数据库，并在测试前创建扩展 `create extension if not exists vector;`。
 
 ### 5. 日志输出
 

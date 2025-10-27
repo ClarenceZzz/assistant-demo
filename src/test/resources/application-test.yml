@@ -4,6 +4,11 @@ spring:
     username: postgres
     password: zAzHHplnxXb7QvT02QMl0oPV
     driver-class-name: org.postgresql.Driver
+    hikari:
+      initialization-fail-timeout: -1
+  sql:
+    init:
+      mode: never
   ai:
     dashscope:
       api-key: test-dashscope-key

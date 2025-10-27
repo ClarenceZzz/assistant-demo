@@ -38,6 +38,6 @@
 - 2025-10-21: 任务创建，作为项目启动的第一个技术任务，已明确技术选型。
 - 2025-10-26: 将任务移动至 In Progress，开始集成 Spring AI 依赖与 PgVector 配置。
 - 2025-10-26: 完成依赖与配置落地，引入 `DeterministicEmbeddingModel` 作为临时嵌入实现并排除 DashScope 嵌入自动配置，保证在未获取真实密钥时应用可启动。
-- 2025-10-27: 调整 `PgVectorStoreIntegrationTest`，新增 `pgvector.test.mode` 模式（auto/container/external/skip），在无 Docker 环境下可改用外部数据库或跳过集成测试。
+- 2025-10-27: 移除所有 Testcontainers 依赖，改为直接连接外部 PostgreSQL + pgvector，数据库未就绪时测试自动跳过。
 - 2025-10-26: 使用 Testcontainers (pgvector/pgvector:pg16) 编写并通过 `PgVectorStoreIntegrationTest`，验证 `VectorStore` Bean 可注入并支持写入/查询。
 - 2025-10-26: 执行 `mvn test`、`mvn clean install`，并在启动本地 PostgreSQL 后完成 `mvn spring-boot:run` 在线验证。
