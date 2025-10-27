@@ -18,6 +18,13 @@ spring:
       model: Qwen/Qwen3-Embedding-8B
       encoding-format: float
       dimensions: 1536
+      rerank:
+        api-url: https://api.siliconflow.cn/v1/rerank
+        api-key: test-rerank-key
+        model: Qwen/Qwen3-Reranker-8B
+        instruction: Please rerank the documents based on the query.
+        top-n: 5
+        return-documents: true
     vectorstore:
       pgvector:
         initialize-schema: true

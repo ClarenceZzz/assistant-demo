@@ -7,10 +7,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeEmbeddingAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
 import com.example.springaialibaba.embedding.siliconflow.SiliconFlowEmbeddingProperties;
+import com.example.springaialibaba.rerank.siliconflow.SiliconFlowRerankProperties;
 
 @SpringBootApplication(exclude = DashScopeEmbeddingAutoConfiguration.class)
-@EnableConfigurationProperties(SiliconFlowEmbeddingProperties.class)
+@EnableConfigurationProperties({SiliconFlowEmbeddingProperties.class, SiliconFlowRerankProperties.class})
 public class SpringAiAlibabaApplication {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiAlibabaApplication.class);
