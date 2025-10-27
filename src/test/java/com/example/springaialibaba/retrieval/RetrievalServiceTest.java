@@ -2,10 +2,10 @@ package com.example.springaialibaba.retrieval;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,60 +18,59 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 
+import com.example.springaialibaba.rerank.RerankedDocument;
+import com.example.springaialibaba.rerank.siliconflow.RerankClient;
+
 @ExtendWith(MockitoExtension.class)
 class RetrievalServiceTest {
 
-    private static final int DEFAULT_TOP_K = 20;
+    private static final String QUERY = "test query";
 
     @Mock
     private VectorStore vectorStore;
+
+    @Mock
+    private RerankClient rerankClient;
 
     private RetrievalService retrievalService;
 
     @BeforeEach
     void setUp() {
-        retrievalService = new RetrievalService(vectorStore, DEFAULT_TOP_K);
+        retrievalService = new RetrievalService(vectorStore, rerankClient, 20, 5);
     }
 
     @Test
-    void shouldReturnDocumentsFromVectorStore() {
-        String query = "test query";
-        int topK = 10;
-        List<Document> expectedDocuments = List.of(new Document("content-1"), new Document("content-2"));
-        when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(expectedDocuments);
+    void shouldReorderDocumentsBasedOnRerankResults() {
+        List<Document> documents = List.of(new Document("doc-0"), new Document("doc-1"), new Document("doc-2"));
+        when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(documents);
+        when(rerankClient.rerank(eq(QUERY), any()))
+                .thenReturn(List.of(new RerankedDocument(2, "doc-2", 0.9),
+                        new RerankedDocument(0, "doc-0", 0.5),
+                        new RerankedDocument(1, "doc-1", 0.1)));
 
-        List<Document> actualDocuments = retrievalService.retrieve(query, topK);
+        List<Document> reranked = retrievalService.retrieveAndRerank(QUERY, 2);
 
-        assertThat(actualDocuments).isEqualTo(expectedDocuments);
+        assertThat(reranked).hasSize(2);
+        assertThat(reranked.get(0).getText()).isEqualTo("doc-2");
+        assertThat(reranked.get(1).getText()).isEqualTo("doc-0");
 
-        ArgumentCaptor<SearchRequest> requestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
-        verify(vectorStore).similaritySearch(requestCaptor.capture());
-        SearchRequest capturedRequest = requestCaptor.getValue();
-        assertThat(capturedRequest.getQuery()).isEqualTo(query);
-        assertThat(capturedRequest.getTopK()).isEqualTo(topK);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<String>> documentsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(rerankClient).rerank(eq(QUERY), documentsCaptor.capture());
+        assertThat(documentsCaptor.getValue()).containsExactly("doc-0", "doc-1", "doc-2");
     }
 
     @Test
-    void shouldReturnEmptyListWhenVectorStoreReturnsNull() {
-        String query = "no results";
-        when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(null);
+    void shouldFallbackToVectorResultsWhenRerankFails() {
+        List<Document> documents = List.of(new Document("doc-0"), new Document("doc-1"), new Document("doc-2"));
+        when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(documents);
+        when(rerankClient.rerank(eq(QUERY), any())).thenThrow(new RuntimeException("Rerank failed"));
 
-        List<Document> documents = retrievalService.retrieve(query, 5);
+        List<Document> fallback = retrievalService.retrieveAndRerank(QUERY, 2);
 
-        assertThat(documents).isEmpty();
-    }
-
-    @Test
-    void shouldUseDefaultTopKWhenNotProvided() {
-        String query = "default top k";
-        when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(Collections.emptyList());
-
-        retrievalService.retrieve(query);
-
-        ArgumentCaptor<SearchRequest> requestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
-        verify(vectorStore).similaritySearch(requestCaptor.capture());
-        SearchRequest capturedRequest = requestCaptor.getValue();
-        assertThat(capturedRequest.getQuery()).isEqualTo(query);
-        assertThat(capturedRequest.getTopK()).isEqualTo(DEFAULT_TOP_K);
+        assertThat(fallback).hasSize(2);
+        assertThat(fallback.get(0).getText()).isEqualTo("doc-0");
+        assertThat(fallback.get(1).getText()).isEqualTo("doc-1");
     }
 }
+
