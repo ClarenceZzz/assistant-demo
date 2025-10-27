@@ -15,10 +15,10 @@
 - _None_
 
 ## In Progress
-- _None_
+- T1-2-implement-embedding-client
 
 ## In Review
-- T1-2-implement-embedding-client
+- _None_
 
 ## Testing / QA
 - _None_

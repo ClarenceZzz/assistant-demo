@@ -12,6 +12,12 @@ spring:
   ai:
     dashscope:
       api-key: test-dashscope-key
+    siliconflow:
+      api-url: https://api.siliconflow.cn/v1/embeddings
+      api-key: sk-fvkljvsojrgknsnqftkpnjoxfqvjijitspsvalywcfblvhim
+      model: Qwen/Qwen3-Embedding-8B
+      encoding-format: float
+      dimensions: 1536
     vectorstore:
       pgvector:
         initialize-schema: true
