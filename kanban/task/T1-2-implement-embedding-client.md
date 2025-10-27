@@ -46,3 +46,4 @@
 - 2025-10-26: codex 完成 SiliconFlow 客户端实现与单元测试，执行 `mvn -q test` 全量通过。
 - 2025-10-26: 使用测试 API Key 启用集成测试 `SiliconFlowEmbeddingClientIT`，命令 `mvn -q test -Dsiliconflow.it.enabled=true` 通过。
 - 2025-10-27: 通过 GitHub MCP 尝试创建 PR，但由于认证失败未能提交，请求后续补充凭证后重试。
+- 2025-10-27: 凭证更新后再次使用 GitHub MCP 创建 PR（#2）成功，等待 Review。
