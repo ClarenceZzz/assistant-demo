@@ -65,3 +65,4 @@ management:
 app:
   retrieval:
     initial-top-k: ${APP_RETRIEVAL_INITIAL_TOP_K:20}
+    final-top-n: ${APP_RETRIEVAL_FINAL_TOP_N:5}
