@@ -66,3 +66,18 @@ app:
   retrieval:
     initial-top-k: ${APP_RETRIEVAL_INITIAL_TOP_K:20}
     final-top-n: ${APP_RETRIEVAL_FINAL_TOP_N:5}
+
+prompt:
+  template: classpath:prompts/dynamic_prompt_template.txt
+  defaults:
+    persona: 通用知识助手
+    channel: 默认渠道
+
+fallback:
+  answer:
+    no-context: ${FALLBACK_ANSWER_NO_CONTEXT:当前知识库暂无相关内容，请稍后重试}
+    error: ${FALLBACK_ANSWER_ERROR:AI 服务暂时不可用，请稍后再试}
+
+retrieval:
+  context:
+    min-threshold: ${RETRIEVAL_CONTEXT_MIN_THRESHOLD:1}
