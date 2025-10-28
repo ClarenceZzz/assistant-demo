@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T3-2-implement-llm-generation-with-fallback
 - T4-1-implement-query-preprocessing
 - T4-2-create-rag-api-endpoint
 - T4-3-implement-response-formatting
@@ -11,6 +10,7 @@
 
 ## In Progress
 - T1-2-implement-embedding-client
+- T3-2-implement-llm-generation-with-fallback
 
 ## In Review
 - T2-1-implement-vector-retrieval
