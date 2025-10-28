@@ -19,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+/**
+ * 验证 PgVector 向量存储 Bean 在测试环境下可用并支持增删查操作。
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,11 +44,17 @@ class PgVectorStoreIntegrationTest {
         }
     }
 
+    /**
+     * 验证 PgVectorStore Bean 已被正确注册到 Spring 上下文中。
+     */
     @Test
     void shouldExposeVectorStoreBeanInContext() {
         assertThat(vectorStore).isNotNull();
     }
 
+    /**
+     * 验证 PgVectorStore 能够写入文档并成功执行相似度检索。
+     */
     @Test
     void shouldAddAndQueryDocumentsFromPgVector() {
         Document document = new Document("Spring AI 向量检索示例", Map.of("source", "test"));

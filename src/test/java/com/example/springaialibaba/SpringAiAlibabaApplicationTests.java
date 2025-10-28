@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+/**
+ * 验证 Spring Boot 测试配置能够启动应用上下文并连接测试数据库。
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -30,6 +33,9 @@ class SpringAiAlibabaApplicationTests {
         }
     }
 
+    /**
+     * 验证 Spring Boot 测试上下文能够成功启动。
+     */
     @Test
     void contextLoads() {
     }
