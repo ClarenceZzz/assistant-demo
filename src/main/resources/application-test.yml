@@ -1,5 +1,6 @@
 spring:
   datasource:
+#    url: jdbc:postgresql://47.238.141.21:5432/test
     url: jdbc:postgresql://localhost:5432/test
     username: postgres
     password: zAzHHplnxXb7QvT02QMl0oPV
@@ -20,7 +21,7 @@ spring:
       dimensions: 1536
       rerank:
         api-url: https://api.siliconflow.cn/v1/rerank
-        api-key: test-rerank-key
+        api-key: sk-fvkljvsojrgknsnqftkpnjoxfqvjijitspsvalywcfblvhim
         model: Qwen/Qwen3-Reranker-8B
         instruction: Please rerank the documents based on the query.
         top-n: 5
@@ -43,3 +44,11 @@ spring:
     vectorstore:
       pgvector:
         initialize-schema: true
+#        initialize-schema: false
+#        table-name: rag_chunks
+#        schema-name: public
+#        id-type: text
+#logging:
+#  level:
+#    org.springframework.jdbc.core: DEBUG   # 打印 JDBC SQL
+#    org.springframework.jdbc.core.StatementCreatorUtils: TRACE # 打印参数绑定
