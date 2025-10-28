@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T4-2-create-rag-api-endpoint
 - T4-3-implement-response-formatting
 
 ## To Do
@@ -18,6 +17,7 @@
 - T1-4-implement-chat-client
 - T2-2-integrate-rerank-api
 - T3-1-implement-dynamic-prompt
+- T4-2-create-rag-api-endpoint
 
 ## Testing / QA
 - _None_
