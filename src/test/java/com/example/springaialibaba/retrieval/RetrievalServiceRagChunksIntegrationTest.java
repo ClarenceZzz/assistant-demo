@@ -13,8 +13,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * Integration test that verifies {@link RetrievalService} can read data from the
- * {@code rag_chunks} table configured in {@code application-test.yml}.
+ * 验证 {@link RetrievalService} 能够命中 {@code application-test.yml} 中配置的
+ * {@code rag_chunks} 表并读取实际分片内容。
  */
 @SpringBootTest
 @ActiveProfiles("test")

@@ -24,8 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * Integration test that exercises {@link RetrievalService} against the real PgVector
- * database configured in the {@code test} Spring profile.
+ * 使用测试 Profile 下的真实 PgVector 数据库验证 {@link RetrievalService} 的检索能力。
  */
 @SpringBootTest
 @ActiveProfiles("test")

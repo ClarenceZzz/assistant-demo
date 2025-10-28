@@ -21,6 +21,9 @@ import org.springframework.ai.vectorstore.VectorStore;
 import com.example.springaialibaba.rerank.RerankedDocument;
 import com.example.springaialibaba.rerank.siliconflow.RerankClient;
 
+/**
+ * 覆盖检索服务调用重排序流程及降级逻辑的单元测试。
+ */
 @ExtendWith(MockitoExtension.class)
 class RetrievalServiceTest {
 
@@ -73,4 +76,3 @@ class RetrievalServiceTest {
         assertThat(fallback.get(1).getText()).isEqualTo("doc-1");
     }
 }
-
