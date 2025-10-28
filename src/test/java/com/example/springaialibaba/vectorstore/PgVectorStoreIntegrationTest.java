@@ -44,11 +44,17 @@ class PgVectorStoreIntegrationTest {
         }
     }
 
+    /**
+     * 验证 PgVectorStore Bean 已被正确注册到 Spring 上下文中。
+     */
     @Test
     void shouldExposeVectorStoreBeanInContext() {
         assertThat(vectorStore).isNotNull();
     }
 
+    /**
+     * 验证 PgVectorStore 能够写入文档并成功执行相似度检索。
+     */
     @Test
     void shouldAddAndQueryDocumentsFromPgVector() {
         Document document = new Document("Spring AI 向量检索示例", Map.of("source", "test"));

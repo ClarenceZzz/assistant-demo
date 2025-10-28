@@ -70,6 +70,9 @@ class RetrievalServiceIntegrationTest {
         }
     }
 
+    /**
+     * 验证检索服务能够向真实 PgVector 写入文档并检索到匹配内容。
+     */
     @Test
     void shouldRetrieveDocumentsFromRealPgVectorDatabase() {
         String content = "Retrieval integration test document - " + UUID.randomUUID();
@@ -88,6 +91,9 @@ class RetrievalServiceIntegrationTest {
                 });
     }
 
+    /**
+     * 验证测试环境使用的数据库连接信息与配置文件保持一致。
+     */
     @Test
     void shouldUseApplicationTestDatasourceConfiguration() throws Exception {
         try (Connection connection = dataSource.getConnection()) {

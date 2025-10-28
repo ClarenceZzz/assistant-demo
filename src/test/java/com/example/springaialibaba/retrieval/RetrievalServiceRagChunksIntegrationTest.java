@@ -26,6 +26,9 @@ class RetrievalServiceRagChunksIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * 验证检索服务可以直接命中 rag_chunks 表中的示例分片并返回内容片段。
+     */
     @Test
     void shouldRetrieveChunkFromRagChunksTable() {
         Map<String, Object> chunkRow = jdbcTemplate.queryForMap(

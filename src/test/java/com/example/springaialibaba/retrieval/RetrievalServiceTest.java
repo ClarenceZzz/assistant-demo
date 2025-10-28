@@ -42,6 +42,9 @@ class RetrievalServiceTest {
         retrievalService = new RetrievalService(vectorStore, rerankClient, 20, 5);
     }
 
+    /**
+     * 验证重排序结果能够根据 RerankClient 的顺序调整，并正确传递原始文档内容。
+     */
     @Test
     void shouldReorderDocumentsBasedOnRerankResults() {
         List<Document> documents = List.of(new Document("doc-0"), new Document("doc-1"), new Document("doc-2"));
@@ -63,6 +66,9 @@ class RetrievalServiceTest {
         assertThat(documentsCaptor.getValue()).containsExactly("doc-0", "doc-1", "doc-2");
     }
 
+    /**
+     * 验证当 Rerank 失败时，检索服务会降级返回原始向量检索结果的前 topN 项。
+     */
     @Test
     void shouldFallbackToVectorResultsWhenRerankFails() {
         List<Document> documents = List.of(new Document("doc-0"), new Document("doc-1"), new Document("doc-2"));

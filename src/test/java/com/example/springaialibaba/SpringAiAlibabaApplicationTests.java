@@ -33,6 +33,9 @@ class SpringAiAlibabaApplicationTests {
         }
     }
 
+    /**
+     * 验证 Spring Boot 测试上下文能够成功启动。
+     */
     @Test
     void contextLoads() {
     }
