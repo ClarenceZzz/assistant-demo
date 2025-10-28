@@ -66,3 +66,9 @@ app:
   retrieval:
     initial-top-k: ${APP_RETRIEVAL_INITIAL_TOP_K:20}
     final-top-n: ${APP_RETRIEVAL_FINAL_TOP_N:5}
+
+prompt:
+  template: classpath:prompts/dynamic_prompt_template.txt
+  defaults:
+    persona: 通用知识助手
+    channel: 默认渠道

@@ -1,7 +1,6 @@
 # Kanban Board
 
 ## Backlog
-- T3-1-implement-dynamic-prompt
 - T3-2-implement-llm-generation-with-fallback
 - T4-1-implement-query-preprocessing
 - T4-2-create-rag-api-endpoint
@@ -18,6 +17,7 @@
 - T1-3-implement-rerank-client
 - T1-4-implement-chat-client
 - T2-2-integrate-rerank-api
+- T3-1-implement-dynamic-prompt
 
 ## Testing / QA
 - _None_
