@@ -1,14 +1,13 @@
 # Kanban Board
 
 ## Backlog
-- T4-1-implement-query-preprocessing
-- T4-2-create-rag-api-endpoint
-- T4-3-implement-response-formatting
+- _None_
 
 ## To Do
 - _None_
 
 ## In Progress
+- T4-1-implement-query-preprocessing
 - T1-2-implement-embedding-client
 - T3-2-implement-llm-generation-with-fallback
 
@@ -18,6 +17,8 @@
 - T1-4-implement-chat-client
 - T2-2-integrate-rerank-api
 - T3-1-implement-dynamic-prompt
+- T4-2-create-rag-api-endpoint
+- T4-3-implement-response-formatting
 
 ## Testing / QA
 - _None_

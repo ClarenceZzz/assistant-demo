@@ -61,7 +61,9 @@ public class GenericChatClient implements ChatModel {
     public ChatResponse call(Prompt prompt) {
         Assert.notNull(prompt, "Prompt 不能为空");
         ChatCompletionRequest request = buildRequest(prompt);
+        log.info("开始调用 " + properties.getApiUrl());
         ResponseEntity<ChatCompletionResponse> response = invokeApi(request);
+        log.info("调用结束 " + properties.getApiUrl());
         ChatCompletionResponse body = response.getBody();
         if (body == null) {
             throw new GenericChatApiException("通用 Chat API 响应体为空", response.getStatusCode(), null, null);
