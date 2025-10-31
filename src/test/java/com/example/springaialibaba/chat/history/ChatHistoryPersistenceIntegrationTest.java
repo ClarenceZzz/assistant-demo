@@ -2,6 +2,8 @@ package com.example.springaialibaba.chat.history;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,9 @@ class ChatHistoryPersistenceIntegrationTest {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired(required = false)
     private JdbcTemplate jdbcTemplate;
@@ -69,12 +74,24 @@ class ChatHistoryPersistenceIntegrationTest {
                 null,
                 null));
 
+        JsonNode retrievalContext =
+                objectMapper.readTree("""
+                        [
+                          {
+                            "title": "产品说明书_OG-5308_20251020",
+                            "section": "8)按摩手法(手动按摩功能控制键)",
+                            "documentId": "产品说明书_OG-5308_20251020",
+                            "chunkId": "产品说明书_OG-5308_20251020-27"
+                          }
+                        ]
+                        """);
+
         ChatMessage message = new ChatMessage(
                 null,
                 savedSession.id(),
                 ChatMessageRole.USER,
                 "您好，我想了解按摩椅的功能",
-                null,
+                retrievalContext,
                 null);
 
         ChatMessage savedMessage = chatMessageRepository.save(message);
@@ -86,7 +103,7 @@ class ChatHistoryPersistenceIntegrationTest {
         assertThat(reloadedMessage.get().sessionId()).isEqualTo(savedSession.id());
         assertThat(reloadedMessage.get().role()).isEqualTo(ChatMessageRole.USER);
         assertThat(reloadedMessage.get().content()).isEqualTo("您好，我想了解按摩椅的功能");
-        assertThat(reloadedMessage.get().retrievalContext()).isNull();
+        assertThat(reloadedMessage.get().retrievalContext()).isEqualTo(retrievalContext);
         assertThat(reloadedMessage.get().createdAt()).isNotNull();
     }
 
