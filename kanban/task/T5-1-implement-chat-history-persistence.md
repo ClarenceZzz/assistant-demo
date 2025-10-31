@@ -20,10 +20,10 @@
 ]`），确保 Spring Data JDBC 配置能正确处理。
 
 ## Subtasks
-- [ ] 创建 `ChatSession.java` 实体类。
-- [ ] 创建 `ChatMessage.java` 实体类。
-- [ ] 创建 `ChatSessionRepository.java` 接口，继承 `PagingAndSortingRepository<ChatSession, Long>`，以支持基本的 CRUD 和分页排序操作。
-- [ ] 创建 `ChatMessageRepository.java` 接口，继承 `PagingAndSortingRepository<ChatMessage, Long>`，以支持基本的 CRUD 和分页排序操作。
+- [x] 创建 `ChatSession.java` 实体类。
+- [x] 创建 `ChatMessage.java` 实体类。
+- [x] 创建 `ChatSessionRepository.java` 接口，继承 `PagingAndSortingRepository<ChatSession, Long>`，以支持基本的 CRUD 和分页排序操作。
+- [x] 创建 `ChatMessageRepository.java` 接口，继承 `PagingAndSortingRepository<ChatMessage, Long>`，以支持基本的 CRUD 和分页排序操作。
 
 ## Developer
 - Owner: codex
@@ -36,7 +36,7 @@
 - 能够通过编写一个简单的集成测试，成功地向数据库中插入并读取一条 `ChatSession` 和 `ChatMessage` 记录。
 
 ## Test Cases
-- [ ] **单元测试**:
+- [x] **单元测试**:
     - `testSaveAndFindChatSession`: 创建一个 `ChatSession` 对象，通过 `ChatSessionRepository` 保存它，然后根据 ID 重新查询，断言查询结果与原始对象一致。
     - `testSaveAndFindChatMessage`: 创建并保存一个 `ChatSession`，然后创建一个关联的 `ChatMessage` 对象，通过 `ChatMessageRepository` 保存它，然后根据 ID 重新查询，断言查询结果正确。
 
@@ -48,3 +48,4 @@
 
 ## Notes & Updates
 - 2025-10-23: 任务创建。这是聊天记录功能的第一个基础任务。
+- 2025-10-23: 完成实体、仓库与 JSONB 转换配置，并通过 Spring Boot 集成测试验证持久化能力。
