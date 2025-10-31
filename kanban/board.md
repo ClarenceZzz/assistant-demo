@@ -28,3 +28,4 @@
 
 ## Done
 - T1-1-setup-spring-ai-project
+- T5-1-implement-chat-history-persistence
