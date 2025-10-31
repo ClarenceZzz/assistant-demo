@@ -8,9 +8,9 @@
 
 ## In Progress
 - T4-1-implement-query-preprocessing
-- T1-2-implement-embedding-client
-- T3-2-implement-llm-generation-with-fallback
-- T5-2-implement-chat-history-service
+ - T1-2-implement-embedding-client
+ - T3-2-implement-llm-generation-with-fallback
+ - T5-2-implement-chat-history-service
 
 ## In Review
 - T2-1-implement-vector-retrieval
@@ -20,6 +20,7 @@
 - T3-1-implement-dynamic-prompt
 - T4-2-create-rag-api-endpoint
 - T4-3-implement-response-formatting
+- T5-3-implement-chat-history-controller
 
 ## Testing / QA
 - _None_
