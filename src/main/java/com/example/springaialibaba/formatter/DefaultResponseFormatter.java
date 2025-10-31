@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.springaialibaba.controller.dto.RagQueryResponse;
 import com.example.springaialibaba.controller.dto.ReferenceDto;
+import org.springframework.util.StringUtils;
 
 /**
  * Default implementation of {@link ResponseFormatter} that builds the API
@@ -40,7 +41,13 @@ public class DefaultResponseFormatter implements ResponseFormatter {
             reference.setTitle(extractString(metadata, "title", "document_title"));
             reference.setSection(extractString(metadata, "section", "section_title"));
             reference.setDocumentId(extractString(metadata, "document_id", "doc_id", "documentId"));
+            if (!StringUtils.hasText(reference.getDocumentId())) {
+                reference.setDocumentId(extractString(metadata, "title"));
+            }
             reference.setChunkId(extractString(metadata, "chunk_id", "chunkId", "id"));
+            if (!StringUtils.hasText(reference.getChunkId())) {
+                reference.setChunkId(extractString(metadata, "title") + "-" + extractString(metadata, "chunk_index"));
+            }
             references.add(reference);
         }
         return references;
