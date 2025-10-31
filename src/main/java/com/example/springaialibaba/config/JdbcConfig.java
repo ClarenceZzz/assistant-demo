@@ -3,6 +3,7 @@ package com.example.springaialibaba.config;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.SQLException;
 import java.util.List;
 import org.postgresql.util.PGobject;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +25,7 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
     protected List<?> userConverters() {
         return List.of(
                 new PgObjectToJsonNodeConverter(objectMapper),
-                new JsonNodeToStringConverter(objectMapper),
+                new JsonNodeToPgObjectConverter(objectMapper),
                 new StringToJsonNodeConverter(objectMapper));
     }
 
@@ -51,23 +52,28 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
     }
 
     @WritingConverter
-    static class JsonNodeToStringConverter implements Converter<JsonNode, String> {
+    static class JsonNodeToPgObjectConverter implements Converter<JsonNode, PGobject> {
 
         private final ObjectMapper objectMapper;
 
-        JsonNodeToStringConverter(ObjectMapper objectMapper) {
+        JsonNodeToPgObjectConverter(ObjectMapper objectMapper) {
             this.objectMapper = objectMapper;
         }
 
         @Override
-        public String convert(JsonNode source) {
+        public PGobject convert(JsonNode source) {
             if (source == null) {
                 return null;
             }
             try {
-                return objectMapper.writeValueAsString(source);
+                PGobject pgObject = new PGobject();
+                pgObject.setType("jsonb");
+                pgObject.setValue(objectMapper.writeValueAsString(source));
+                return pgObject;
             } catch (JsonProcessingException e) {
-                throw new IllegalArgumentException("Failed to serialize JsonNode to String", e);
+                throw new IllegalArgumentException("Failed to serialize JsonNode to JSONB", e);
+            } catch (SQLException e) {
+                throw new IllegalArgumentException("Failed to wrap JsonNode as PGobject", e);
             }
         }
     }
