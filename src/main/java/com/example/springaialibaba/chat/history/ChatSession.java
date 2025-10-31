@@ -1,6 +1,5 @@
 package com.example.springaialibaba.chat.history;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.OffsetDateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
@@ -14,7 +13,6 @@ public record ChatSession(
         @Column("session_title") String sessionTitle,
         @Column("session_category") String sessionCategory,
         @Column("session_status") ChatSessionStatus sessionStatus,
-        @Column("retrieval_context") JsonNode retrievalContext,
         @ReadOnlyProperty @Column("created_at") OffsetDateTime createdAt,
         @ReadOnlyProperty @Column("updated_at") OffsetDateTime updatedAt) {
 
@@ -25,7 +23,6 @@ public record ChatSession(
                 sessionTitle,
                 sessionCategory,
                 sessionStatus,
-                retrievalContext,
                 createdAt,
                 updatedAt);
     }

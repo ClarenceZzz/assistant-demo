@@ -36,19 +36,7 @@ class ChatHistoryPersistenceIntegrationTest {
 
     @Test
     void testSaveAndFindChatSession() throws Exception {
-        Assumptions.assumeTrue(canUseExistingSchema(), "测试数据库不可用或缺少 chat_session/chat_message 表，跳过测试");
-
-        JsonNode retrievalContext =
-                objectMapper.readTree("""
-                        [
-                          {
-                            "title": "产品说明书_OG-5308_20251020",
-                            "section": "气囊按摩位置",
-                            "documentId": "产品说明书_OG-5308_20251020",
-                            "chunkId": "产品说明书_OG-5308_20251020-9"
-                          }
-                        ]
-                        """);
+        Assumptions.assumeTrue(canUseExistingSchema(), "测试数据库不可用或缺少必要字段，跳过测试");
 
         ChatSession session = new ChatSession(
                 null,
@@ -56,7 +44,6 @@ class ChatHistoryPersistenceIntegrationTest {
                 "测试会话",
                 "DEFAULT",
                 ChatSessionStatus.ACTIVE,
-                retrievalContext,
                 null,
                 null);
 
@@ -70,14 +57,13 @@ class ChatHistoryPersistenceIntegrationTest {
         assertThat(reloadedSession.get().sessionTitle()).isEqualTo("测试会话");
         assertThat(reloadedSession.get().sessionCategory()).isEqualTo("DEFAULT");
         assertThat(reloadedSession.get().sessionStatus()).isEqualTo(ChatSessionStatus.ACTIVE);
-        assertThat(reloadedSession.get().retrievalContext()).isEqualTo(retrievalContext);
         assertThat(reloadedSession.get().createdAt()).isNotNull();
         assertThat(reloadedSession.get().updatedAt()).isNotNull();
     }
 
     @Test
     void testSaveAndFindChatMessage() throws Exception {
-        Assumptions.assumeTrue(canUseExistingSchema(), "测试数据库不可用或缺少 chat_session/chat_message 表，跳过测试");
+        Assumptions.assumeTrue(canUseExistingSchema(), "测试数据库不可用或缺少必要字段，跳过测试");
 
         ChatSession savedSession = chatSessionRepository.save(new ChatSession(
                 null,
@@ -85,7 +71,6 @@ class ChatHistoryPersistenceIntegrationTest {
                 "另一个会话",
                 "SUPPORT",
                 ChatSessionStatus.ACTIVE,
-                null,
                 null,
                 null));
 
@@ -129,7 +114,23 @@ class ChatHistoryPersistenceIntegrationTest {
         try {
             jdbcTemplate.queryForObject("SELECT COUNT(*) FROM chat_session", Long.class);
             jdbcTemplate.queryForObject("SELECT COUNT(*) FROM chat_message", Long.class);
-            return true;
+            return hasColumn("chat_message", "retrieval_context")
+                    && hasColumn("chat_session", "session_status");
+        }
+        catch (DataAccessException ex) {
+            return false;
+        }
+    }
+
+    private boolean hasColumn(String tableName, String columnName) {
+        try {
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.columns "
+                            + "WHERE table_schema = current_schema() AND table_name = ? AND column_name = ?",
+                    Long.class,
+                    tableName,
+                    columnName);
+            return count != null && count > 0;
         }
         catch (DataAccessException ex) {
             return false;
