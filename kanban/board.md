@@ -10,6 +10,7 @@
 - T4-1-implement-query-preprocessing
 - T1-2-implement-embedding-client
 - T3-2-implement-llm-generation-with-fallback
+- T5-2-implement-chat-history-service
 
 ## In Review
 - T2-1-implement-vector-retrieval
