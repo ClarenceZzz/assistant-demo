@@ -16,6 +16,8 @@ public class RagQueryResponse {
 
     private Double confidence;
 
+    private Long sessionId;
+
     public RagQueryResponse() {
         this.references = new ArrayList<>();
     }
@@ -57,6 +59,14 @@ public class RagQueryResponse {
         this.confidence = confidence;
     }
 
+    public Long getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -68,11 +78,12 @@ public class RagQueryResponse {
         RagQueryResponse that = (RagQueryResponse) o;
         return Objects.equals(answer, that.answer)
                 && Objects.equals(getReferences(), that.getReferences())
-                && Objects.equals(confidence, that.confidence);
+                && Objects.equals(confidence, that.confidence)
+                && Objects.equals(sessionId, that.sessionId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(answer, getReferences(), confidence);
+        return Objects.hash(answer, getReferences(), confidence, sessionId);
     }
 }

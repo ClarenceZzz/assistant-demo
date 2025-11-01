@@ -2,6 +2,7 @@ package com.example.springaialibaba.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +16,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.springaialibaba.chat.history.ChatHistoryService;
+import com.example.springaialibaba.chat.history.ChatSession;
 import com.example.springaialibaba.controller.dto.RagQueryRequest;
 import com.example.springaialibaba.controller.dto.RagQueryResponse;
+import com.example.springaialibaba.controller.dto.ReferenceDto;
 import com.example.springaialibaba.formatter.ResponseFormatter;
 import com.example.springaialibaba.generation.GenerationService;
 import com.example.springaialibaba.preprocessor.QueryPreprocessor;
 import com.example.springaialibaba.retrieval.RetrievalService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * REST controller orchestrating the RAG pipeline.
@@ -35,6 +41,8 @@ public class RagController {
 
     private static final String DEFAULT_CHANNEL = "generic";
 
+    private static final String DEFAULT_USER_ID = "anonymous-user";
+
     private final QueryPreprocessor queryPreprocessor;
 
     private final RetrievalService retrievalService;
@@ -43,12 +51,19 @@ public class RagController {
 
     private final ResponseFormatter responseFormatter;
 
+    private final ChatHistoryService chatHistoryService;
+
+    private final ObjectMapper objectMapper;
+
     public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService,
-            GenerationService generationService, ResponseFormatter responseFormatter) {
+            GenerationService generationService, ResponseFormatter responseFormatter,
+            ChatHistoryService chatHistoryService, ObjectMapper objectMapper) {
         this.queryPreprocessor = queryPreprocessor;
         this.retrievalService = retrievalService;
         this.generationService = generationService;
         this.responseFormatter = responseFormatter;
+        this.chatHistoryService = chatHistoryService;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -73,6 +88,14 @@ public class RagController {
 
         Double topScore = extractTopScore(documents);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);
+        Long requestedSessionId = request != null ? request.getSessionId() : null;
+        ChatSession session = chatHistoryService.createOrGetSession(
+                Optional.ofNullable(requestedSessionId),
+                resolveUserId(request));
+        chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
+        chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
+                serialiseRetrievalContext(response.getReferences()));
+        response.setSessionId(session.id());
         return ResponseEntity.ok(response);
     }
 
@@ -81,6 +104,17 @@ public class RagController {
             return defaultValue;
         }
         return value.trim();
+    }
+
+    private String resolveUserId(RagQueryRequest request) {
+        if (request == null) {
+            return DEFAULT_USER_ID;
+        }
+        String userId = request.getUserId();
+        if (!StringUtils.hasText(userId)) {
+            return DEFAULT_USER_ID;
+        }
+        return userId.trim();
     }
 
     private Double extractTopScore(List<Document> documents) {
@@ -108,5 +142,17 @@ public class RagController {
             }
         }
         return null;
+    }
+
+    private String serialiseRetrievalContext(List<ReferenceDto> references) {
+        if (references == null || references.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(references);
+        }
+        catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialise retrieval context", ex);
+        }
     }
 }
