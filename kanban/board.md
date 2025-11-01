@@ -21,6 +21,7 @@
 - T4-2-create-rag-api-endpoint
 - T4-3-implement-response-formatting
 - T5-3-implement-chat-history-controller
+- T5-4-integrate-chat-history-with-rag-api
 
 ## Testing / QA
 - _None_
