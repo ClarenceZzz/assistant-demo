@@ -37,7 +37,7 @@ public class ChatHistoryService {
 
     public List<ChatMessage> findMessagesBySessionId(Long sessionId) {
         ChatSession session = findSessionOrThrow(sessionId);
-        return chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(session.id());
+        return chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(session.id());
     }
 
     public ChatSession updateSession(Long sessionId, String title, String category) {
@@ -91,7 +91,7 @@ public class ChatHistoryService {
         return chatMessageRepository.save(message);
     }
 
-    public ChatSession createOrGetSession(Optional<Long> sessionId, String userId) {
+    public ChatSession createOrGetSession(Optional<Long> sessionId, String title, String userId) {
         if (!StringUtils.hasText(userId)) {
             throw new IllegalArgumentException("用户ID不能为空");
         }

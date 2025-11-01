@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface ChatMessageRepository
         extends CrudRepository<ChatMessage, Long>, PagingAndSortingRepository<ChatMessage, Long> {
 
-    List<ChatMessage> findBySessionIdOrderByCreatedAtAsc(Long sessionId);
+    List<ChatMessage> findBySessionIdOrderByCreatedAtDesc(Long sessionId);
 }

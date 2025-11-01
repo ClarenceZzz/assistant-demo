@@ -73,6 +73,13 @@ public class RagController {
             throw new IllegalArgumentException("question must not be blank");
         }
 
+        Long requestedSessionId = request != null ? request.getSessionId() : null;
+        ChatSession session = chatHistoryService.createOrGetSession(
+                Optional.ofNullable(requestedSessionId),
+                request.getQuestion(),
+                resolveUserId(request));
+        chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
+
         log.info("收到 RAG 查询请求，问题长度={}", rawQuestion.length());
         String cleanedQuestion = queryPreprocessor.process(rawQuestion);
         log.debug("预处理后的查询：{}", cleanedQuestion);
@@ -88,11 +95,6 @@ public class RagController {
 
         Double topScore = extractTopScore(documents);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);
-        Long requestedSessionId = request != null ? request.getSessionId() : null;
-        ChatSession session = chatHistoryService.createOrGetSession(
-                Optional.ofNullable(requestedSessionId),
-                resolveUserId(request));
-        chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
         chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
                 serialiseRetrievalContext(response.getReferences()));
         response.setSessionId(session.id());
