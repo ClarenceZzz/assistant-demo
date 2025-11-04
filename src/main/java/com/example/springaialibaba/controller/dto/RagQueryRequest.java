@@ -12,13 +12,23 @@ public class RagQueryRequest {
 
     private String channel;
 
+    private Long sessionId;
+
+    private String userId;
+
     public RagQueryRequest() {
     }
 
     public RagQueryRequest(String question, String persona, String channel) {
+        this(question, persona, channel, null, null);
+    }
+
+    public RagQueryRequest(String question, String persona, String channel, Long sessionId, String userId) {
         this.question = question;
         this.persona = persona;
         this.channel = channel;
+        this.sessionId = sessionId;
+        this.userId = userId;
     }
 
     public String getQuestion() {
@@ -43,5 +53,21 @@ public class RagQueryRequest {
 
     public void setChannel(String channel) {
         this.channel = channel;
+    }
+
+    public Long getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Long sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }
