@@ -11,6 +11,7 @@
 - 如果存在，请根据看板上的任务状态，继续推进任务，或遵照用户本次的指示进行工作。
 
 ### 看板状态文件（board.md）
+
 状态包含：
 * **Backlog**（需求池）
 * **To Do**（当前周期待办）
@@ -20,17 +21,12 @@
 * **Blocked**（阻塞）
 * **Done**（验收通过）
 
-任务状态定义（严格）:
+任务状态定义（严格）：
 * **同一个任务 ID 只能处于一种任务状态中**
-* **In Progress**：除了完成任务外，还需包含单元测试（若适用）。
-* **In Review**：PR 描述需写清修改点、运行方式、影响面、回归风险；至少 1 名审查者通过（由你切换身份扮演）。
-* **Testing / QA**：QA 按测试用例执行，记录 BUG，BUG 分级（P0/P1/P2）。所有 P0 必须解决，P1 需评估。QA 完成后 QA 在卡片上写“QA Passed”（由你切换身份扮演）。
-* **Done**：产品经理或维护者对接收准则（Acceptance Criteria）进行最终验收，若通过，移动卡片到 Done。（由你切换身份扮演）
 
 ### 任务文件（e.g. T1-1-setup-cleaning-framework.md）
 
-### 每个任务卡必须包含以下内容：
-
+每个任务卡必须包含以下内容：
 * **Goal**（任务目标）
 * **Subtasks**（子任务，定义了分步实现任务目标的过程，在执行过程中视情况，你可以创建更细粒度的子任务，但不用更新到任务文件中）
 * **Developer**（开发者、任务复杂度等信息）
@@ -43,7 +39,8 @@
 
 ## 编码规范
 
-**不能在测试类中进行删表操作**
+**不能在测试类中进行删表、删库操作**
+**确保你开始工作时没有处在主分支（main、develop）上，否则拒绝执行任务**。
 
 ### 1. Git 工作流
 
@@ -71,19 +68,15 @@
 
 代码的清晰性、健壮性和一致性是我们的首要原则。
 -   **语言与风格**:
-    -   遵循 **Google Java Style Guide**。
+    - 遵循 **Google Java Style Guide**。 
 -   **面向对象与设计模式**:
-    -   **职责单一**: 代码结构应与 `agents.md` 中定义的代理职责保持一致（如果有的话）。每个 Service/Component/Repository 应只负责一项核心任务（如 `KnowledgeRetriever` 只负责检索，不负责构建Prompt）。
-    -   **依赖注入**: 全面使用 Spring 的依赖注入（`@Autowired`, `@Service`, `@Component`），避免手动 `new` 对象。
+    -   **单一职责原则（SRP）**: 代码结构应与 `agents.md` 中定义的代理职责保持一致（如果有的话）。每个 Service/Component/Repository 应只负责一项核心任务（如 `KnowledgeRetriever` 只负责检索，不负责构建Prompt）。
     -   **接口驱动**: 为核心服务（如 `LLMClient`, `VectorStoreRepository`）定义接口，便于测试时进行 Mock。
 -   **AI 相关规范**:
     -   **Prompt 管理**:
         -   **严禁**将 Prompt 模板硬编码在 Java 代码中。
         -   所有 Prompt 模板应存放在 `resources/prompts/` 目录下，按功能或角色命名（如 `persona_friendly_assistant.txt`）。
         -   使用模板引擎（如 `String.format` 或更专业的库）动态填充模板。
-    -   **异常处理**:
-        -   为外部 AI 服务（LLM, Embedding）的调用定义专门的业务异常，如 `LlmApiException`, `VectorStoreException`。
-        -   在 Controller 层使用 `@ControllerAdvice` 统一捕获这些异常，并返回标准化的错误响应。
 
 ### 3. 测试规范
 
