@@ -1,9 +1,3 @@
-好的，我们来将这个详细的 RAG Pipeline 需求拆解为基于 Spring AI Alibaba 框架和已有 PostgreSQL 数据库表的具体技术任务。
-
-这个拆解将遵循您的流程要求，并提供每个阶段在 Spring Boot + Spring AI 框架下的实现思路和关键代码/组件。
-
----
-
 ### 总体技术架构与选型
 
 *   **后端框架**: Spring Boot 3.x
@@ -18,7 +12,7 @@
 
 #### 任务零：项目基础环境搭建
 
-**目标**: 建立一个集成了 Spring AI、阿里通义千问和 PgVector 的 Spring Boot 项目。
+**目标**: 建立一个集成了 Spring AI、SiliconFlow API和 PgVector 的 Spring Boot 项目。
 
 **实现步骤**:
 1.  **添加 Maven/Gradle 依赖**:
