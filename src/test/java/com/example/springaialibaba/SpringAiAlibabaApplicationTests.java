@@ -1,33 +1,41 @@
 package com.example.springaialibaba;
 
+import java.sql.Connection;
+import javax.sql.DataSource;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
+/**
+ * 验证 Spring Boot 测试配置能够启动应用上下文并连接测试数据库。
+ */
 @SpringBootTest
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SpringAiAlibabaApplicationTests {
 
-    @Container
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("pgvector/pgvector:pg16")
-        .withDatabaseName("test")
-        .withUsername("postgres")
-        .withPassword("zAzHHplnxXb7QvT02QMl0oPV")
-        .withInitScript("sql/enable_vector_extension.sql");
+    @Autowired
+    private DataSource dataSource;
 
-    @DynamicPropertySource
-    static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+    @BeforeAll
+    void ensureDatabaseAvailable() {
+        try (Connection connection = dataSource.getConnection()) {
+            // 仅校验连接可用
+        }
+        catch (Exception ex) {
+            Assertions.fail("无法连接到测试数据库，请确认 application-test.yml 配置与 PostgreSQL 状态。错误信息: "
+                    + ex.getMessage(), ex);
+        }
     }
 
+    /**
+     * 验证 Spring Boot 测试上下文能够成功启动。
+     */
     @Test
     void contextLoads() {
     }
