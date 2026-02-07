@@ -5,12 +5,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "/api/ai", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -19,9 +19,11 @@ public class ChatController {
     private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     private final ChatClient chatClient;
+    private final OpenAiChatModel chatModel;
 
-    public ChatController(ChatClient chatClient) {
+    public ChatController(ChatClient chatClient, OpenAiChatModel chatModel) {
         this.chatClient = chatClient;
+        this.chatModel = chatModel;
     }
 
     @PostMapping(path = "/chat", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -43,4 +45,11 @@ public class ChatController {
                 "response", response
         );
     }
+
+    @GetMapping("/chat2")
+    public Map<String, String> generate(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
+        return Map.of("generation", this.chatModel.call(message));
+    }
+
+    
 }
