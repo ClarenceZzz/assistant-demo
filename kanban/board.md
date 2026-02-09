@@ -31,5 +31,6 @@
 - _None_
 
 ## Done
+ - T1-5-upgrade-dependencies
 - T1-1-setup-spring-ai-project
 - T5-1-implement-chat-history-persistence

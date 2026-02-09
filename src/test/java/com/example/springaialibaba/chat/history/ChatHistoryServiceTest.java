@@ -59,7 +59,7 @@ class ChatHistoryServiceTest {
         ChatSession session = new ChatSession(SESSION_ID, USER_ID, null, null, ChatSessionStatus.ACTIVE, null, null);
         when(chatSessionRepository.findById(SESSION_ID)).thenReturn(Optional.of(session));
         ChatMessage message = new ChatMessage(1L, SESSION_ID, ChatMessageRole.USER, "hi", null, null);
-        when(chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(SESSION_ID)).thenReturn(List.of(message));
+        when(chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(SESSION_ID)).thenReturn(List.of(message));
 
         List<ChatMessage> messages = chatHistoryService.findMessagesBySessionId(SESSION_ID);
 
@@ -155,7 +155,7 @@ class ChatHistoryServiceTest {
         ChatSession saved = new ChatSession(100L, USER_ID, null, null, ChatSessionStatus.ACTIVE, null, null);
         when(chatSessionRepository.save(any(ChatSession.class))).thenReturn(saved);
 
-        ChatSession result = chatHistoryService.createOrGetSession(Optional.empty(), USER_ID);
+        ChatSession result = chatHistoryService.createOrGetSession(Optional.empty(), null, USER_ID);
 
         assertThat(result).isEqualTo(saved);
     }
@@ -165,7 +165,7 @@ class ChatHistoryServiceTest {
         ChatSession session = new ChatSession(SESSION_ID, USER_ID, null, null, ChatSessionStatus.ACTIVE, null, null);
         when(chatSessionRepository.findById(SESSION_ID)).thenReturn(Optional.of(session));
 
-        ChatSession result = chatHistoryService.createOrGetSession(Optional.of(SESSION_ID), USER_ID);
+        ChatSession result = chatHistoryService.createOrGetSession(Optional.of(SESSION_ID), null, USER_ID);
 
         assertThat(result).isEqualTo(session);
     }
@@ -191,7 +191,7 @@ class ChatHistoryServiceTest {
 
     @Test
     void shouldThrowWhenCreateOrGetWithBlankUserId() {
-        assertThatThrownBy(() -> chatHistoryService.createOrGetSession(Optional.empty(), " "))
+        assertThatThrownBy(() -> chatHistoryService.createOrGetSession(Optional.empty(), null, " "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("用户ID不能为空");
     }

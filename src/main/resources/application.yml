@@ -12,6 +12,12 @@ spring:
     init:
       mode: never
   ai:
+    openai:
+      api-key: sk-qsbfrbnsojrkaapifyzvuvfoejsxstpbbokgxngjkzsinabu
+      base-url: https://api.siliconflow.cn
+      chat:
+        options:
+          model: Qwen/Qwen3-VL-32B-Thinking
     dashscope:
       api-key: ${DASHSCOPE_API_KEY:}
       chat:

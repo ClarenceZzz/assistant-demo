@@ -80,7 +80,7 @@ class RagControllerTest {
         RagQueryResponse formatted = new RagQueryResponse("Use the official charger.", List.of(reference), 0.85);
         when(responseFormatter.format("Use the official charger.", documents, 0.85)).thenReturn(formatted);
         ChatSession session = new ChatSession(42L, "test-user", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), anyString())).thenReturn(session);
+        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -96,7 +96,7 @@ class RagControllerTest {
         verify(responseFormatter).format("Use the official charger.", documents, 0.85);
         ArgumentCaptor<Optional<Long>> sessionIdCaptor = ArgumentCaptor.forClass(Optional.class);
         ArgumentCaptor<String> userIdCaptor = ArgumentCaptor.forClass(String.class);
-        verify(chatHistoryService).createOrGetSession(sessionIdCaptor.capture(), userIdCaptor.capture());
+        verify(chatHistoryService).createOrGetSession(sessionIdCaptor.capture(), any(), userIdCaptor.capture());
         verify(chatHistoryService).saveNewMessage(eq(42L), eq("USER"), eq("How to charge the EV?"), isNull());
         ArgumentCaptor<String> retrievalCaptor = ArgumentCaptor.forClass(String.class);
         verify(chatHistoryService).saveNewMessage(eq(42L), eq("ASSISTANT"), eq("Use the official charger."),
@@ -125,7 +125,7 @@ class RagControllerTest {
         when(responseFormatter.format("answer", documents, null))
                 .thenReturn(new RagQueryResponse("answer", Collections.emptyList(), 0.0));
         ChatSession session = new ChatSession(7L, "csr-1", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), anyString())).thenReturn(session);
+        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +137,7 @@ class RagControllerTest {
         verify(retrievalService).retrieveAndRerank("processed");
         verify(generationService).generate("  raw query  ", documents, "default", "generic");
         verify(responseFormatter).format("answer", documents, null);
-        verify(chatHistoryService).createOrGetSession(eq(Optional.empty()), eq("csr-1"));
+        verify(chatHistoryService).createOrGetSession(eq(Optional.empty()), any(), eq("csr-1"));
         verify(chatHistoryService).saveNewMessage(eq(7L), eq("USER"), eq("  raw query  "), isNull());
         verify(chatHistoryService).saveNewMessage(eq(7L), eq("ASSISTANT"), eq("answer"), isNull());
     }
@@ -156,7 +156,7 @@ class RagControllerTest {
         when(responseFormatter.format("Fallback answer", Collections.emptyList(), null))
                 .thenReturn(response);
         ChatSession session = new ChatSession(88L, "guest-user", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), anyString())).thenReturn(session);
+        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,7 +166,7 @@ class RagControllerTest {
                 .andExpect(jsonPath("$.references").isArray())
                 .andExpect(jsonPath("$.sessionId").value(88L));
 
-        verify(chatHistoryService).createOrGetSession(eq(Optional.empty()), eq("guest-user"));
+        verify(chatHistoryService).createOrGetSession(eq(Optional.empty()), any(), eq("guest-user"));
         verify(chatHistoryService).saveNewMessage(eq(88L), eq("USER"), eq("No docs?"), isNull());
         verify(chatHistoryService).saveNewMessage(eq(88L), eq("ASSISTANT"), eq("Fallback answer"), isNull());
     }
@@ -178,6 +178,8 @@ class RagControllerTest {
         request.setUserId("error-user");
 
         when(queryPreprocessor.process("trigger error")).thenReturn("trigger error");
+        ChatSession session = new ChatSession(1L, "error-user", null, null, ChatSessionStatus.ACTIVE, null, null);
+        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
         when(retrievalService.retrieveAndRerank("trigger error"))
                 .thenThrow(new RuntimeException("retrieval failed"));
 
