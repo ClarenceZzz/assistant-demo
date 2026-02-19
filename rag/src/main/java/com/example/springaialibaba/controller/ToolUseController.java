@@ -32,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.UUID;
@@ -146,9 +148,11 @@ public class ToolUseController {
     }
 
     @GetMapping("/managerWithMemory")
-    public ChatResponse analysisWithMemory(@RequestParam String msg) {
+    public ChatResponse analysisWithMemory(@RequestParam String msg, @RequestParam String conversationId) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
-        String conversationId = UUID.randomUUID().toString();
+        if (!StringUtils.hasText(conversationId)) {
+            conversationId = UUID.randomUUID().toString();
+        }
 
         ChatOptions options = ToolCallingChatOptions.builder()
                 .toolCallbacks(ToolCallbacks.from(weatherTool))

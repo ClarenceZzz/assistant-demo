@@ -23,6 +23,7 @@
 - T5-3-implement-chat-history-controller
 - T5-4-integrate-chat-history-with-rag-api
 - T6-1-update-readme-documentation
+- T7-1-advisor-hitl
 
 ## Testing / QA
 - _None_

@@ -225,7 +225,7 @@ public class CustomToolConfig {
                     .map(tc -> new ToolResponseMessage.ToolResponse(tc.id(), tc.name(),
                             "工具调用失败: " + e.getMessage() + "。请用你的知识回答。"))
                     .toList();
-            history.add(new ToolResponseMessage(responses, Map.of()));
+            history.add(ToolResponseMessage.builder().responses(responses).metadata(Map.of()).build());
             log.info("【优雅降级】错误信息已返回给模型");
             return DefaultToolExecutionResult.builder()
                     .conversationHistory(history)

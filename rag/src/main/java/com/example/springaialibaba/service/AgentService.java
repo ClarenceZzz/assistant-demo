@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.catalina.startup.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -189,7 +190,7 @@ public class AgentService {
                         "【操作被用户拒绝】原因: " + rejectReason
                                 + "。请不要再调用此工具，换一种方式回答用户。"))
                 .toList();
-        history.add(new ToolResponseMessage(rejectionResponses, Map.of()));
+        history.add(ToolResponseMessage.builder().responses(rejectionResponses).metadata(Map.of()).build());
 
         // 如果有 ChatMemory，更新记忆
         if (chatMemory != null && conversationId != null) {

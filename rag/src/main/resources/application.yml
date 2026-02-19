@@ -1,0 +1,91 @@
+spring:
+  profiles:
+    active: test
+  application:
+    name: spring-ai-alibaba-demo
+  datasource:
+    url: jdbc:postgresql://${PGVECTOR_HOST:localhost}:${PGVECTOR_PORT:5432}/test
+    username: ${PGVECTOR_USERNAME:postgres}
+    password: ${PGVECTOR_PASSWORD:zAzHHplnxXb7QvT02QMl0oPV}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: never
+  ai:
+    openai:
+      api-key: sk-ijpavjcvxzvomxguiqkcavgurcgbfjrdidqlbfowooxxoest
+      base-url: https://api.siliconflow.cn
+      chat:
+        options:
+          model: Qwen/Qwen3-VL-32B-Thinking
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+      chat:
+        options:
+          model: qwen-plus
+          temperature: 0.8
+      embedding:
+        enabled: false
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+    siliconflow:
+      api-url: ${SILICONFLOW_API_URL:https://api.siliconflow.cn/v1/embeddings}
+      api-key: ${SILICONFLOW_API_KEY:sk-fvkljvsojrgknsnqftkpnjoxfqvjijitspsvalywcfblvhim}
+      model: ${SILICONFLOW_EMBEDDING_MODEL:Qwen/Qwen3-Embedding-8B}
+      encoding-format: ${SILICONFLOW_EMBEDDING_ENCODING:float}
+      dimensions: ${SILICONFLOW_EMBEDDING_DIMENSIONS:1536}
+      rerank:
+        api-url: ${SILICONFLOW_RERANK_API_URL:https://api.siliconflow.cn/v1/rerank}
+        api-key: ${SILICONFLOW_RERANK_API_KEY:${SILICONFLOW_API_KEY:}}
+        model: ${SILICONFLOW_RERANK_MODEL:Qwen/Qwen3-Reranker-8B}
+        instruction: ${SILICONFLOW_RERANK_INSTRUCTION:Please rerank the documents based on the query.}
+        top-n: ${SILICONFLOW_RERANK_TOP_N:5}
+        return-documents: ${SILICONFLOW_RERANK_RETURN_DOCUMENTS:true}
+    generic-chat:
+      api-url: ${GENERIC_CHAT_API_URL:https://api.siliconflow.cn/v1/chat/completions}
+      api-key: ${GENERIC_CHAT_API_KEY:}
+      model: ${GENERIC_CHAT_MODEL:deepseek-ai/DeepSeek-R1}
+      temperature: ${GENERIC_CHAT_TEMPERATURE:0.7}
+      top-p: ${GENERIC_CHAT_TOP_P:0.7}
+      top-k: ${GENERIC_CHAT_TOP_K:50}
+      max-tokens: ${GENERIC_CHAT_MAX_TOKENS:4096}
+      frequency-penalty: ${GENERIC_CHAT_FREQUENCY_PENALTY:0.0}
+      n: ${GENERIC_CHAT_N:1}
+      stream: ${GENERIC_CHAT_STREAM:false}
+      enable-thinking: ${GENERIC_CHAT_ENABLE_THINKING:false}
+      thinking-budget: ${GENERIC_CHAT_THINKING_BUDGET:4096}
+      connect-timeout: ${GENERIC_CHAT_CONNECT_TIMEOUT:PT10S}
+      read-timeout: ${GENERIC_CHAT_READ_TIMEOUT:PT30S}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  retrieval:
+    initial-top-k: ${APP_RETRIEVAL_INITIAL_TOP_K:20}
+    final-top-n: ${APP_RETRIEVAL_FINAL_TOP_N:5}
+
+prompt:
+  template: classpath:prompts/dynamic_prompt_template.txt
+  defaults:
+    persona: 通用知识助手
+    channel: 默认渠道
+
+fallback:
+  answer:
+    no-context: ${FALLBACK_ANSWER_NO_CONTEXT:当前知识库暂无相关内容，请稍后重试}
+    error: ${FALLBACK_ANSWER_ERROR:AI 服务暂时不可用，请稍后再试}
+
+retrieval:
+  context:
+    min-threshold: ${RETRIEVAL_CONTEXT_MIN_THRESHOLD:1}

@@ -13,7 +13,7 @@ spring:
       mode: never
   ai:
     openai:
-      api-key: sk-qsbfrbnsojrkaapifyzvuvfoejsxstpbbokgxngjkzsinabu
+      api-key: sk-ijpavjcvxzvomxguiqkcavgurcgbfjrdidqlbfowooxxoest
       base-url: https://api.siliconflow.cn
       chat:
         options:
