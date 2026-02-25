@@ -11,6 +11,7 @@
  - T1-2-implement-embedding-client
  - T3-2-implement-llm-generation-with-fallback
  - T5-2-implement-chat-history-service
+ - T1-6-fix-startup-configuration
 
 ## In Review
 - T2-1-implement-vector-retrieval
