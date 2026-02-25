@@ -189,7 +189,7 @@ public class AgentService {
                         "【操作被用户拒绝】原因: " + rejectReason
                                 + "。请不要再调用此工具，换一种方式回答用户。"))
                 .toList();
-        history.add(new ToolResponseMessage(rejectionResponses, Map.of()));
+        history.add(ToolResponseMessage.builder().responses(rejectionResponses).metadata(Map.of()).build());
 
         // 如果有 ChatMemory，更新记忆
         if (chatMemory != null && conversationId != null) {

@@ -1,3 +1,11 @@
+logging:
+  level:
+    # 开启 Spring AI Chat Client 的调试日志 (配合 SimpleLoggerAdvisor 使用)
+    org.springframework.ai.chat.client.advisor: DEBUG
+    # 开启 OpenAI 交互的调试日志 (可以看到原始 HTTP 请求)
+    org.springframework.ai.openai.api: DEBUG
+    # 如果使用 RestClient/WebClient 发送请求，也可以开启它们的日志
+    org.springframework.web.client.RestClient: DEBUG
 spring:
   profiles:
     active: test
@@ -12,12 +20,18 @@ spring:
     init:
       mode: never
   ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            platform: postgresql
+            initialization-mode: ALWAYS
     openai:
-      api-key: sk-qsbfrbnsojrkaapifyzvuvfoejsxstpbbokgxngjkzsinabu
+      api-key: sk-ijpavjcvxzvomxguiqkcavgurcgbfjrdidqlbfowooxxoest
       base-url: https://api.siliconflow.cn
       chat:
         options:
-          model: Qwen/Qwen3-VL-32B-Thinking
+          model: deepseek-ai/DeepSeek-V3.2
     dashscope:
       api-key: ${DASHSCOPE_API_KEY:}
       chat:

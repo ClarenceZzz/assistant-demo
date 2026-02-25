@@ -13,6 +13,7 @@
  - T5-2-implement-chat-history-service
 
 ## In Review
+- BUG-01-fix-missing-spring-ai-chat-memory-table
 - T2-1-implement-vector-retrieval
 - T1-3-implement-rerank-client
 - T1-4-implement-chat-client
