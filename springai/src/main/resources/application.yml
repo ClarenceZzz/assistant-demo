@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: test
   application:
     name: springai-demo
   template:
@@ -9,7 +11,7 @@ spring:
       enabled: ALWAYS 
   ai:
     openai:
-      api-key: sk-ijpavjcvxzvomxguiqkcavgurcgbfjrdidqlbfowooxxoest
+      api-key: sk-mnlvoqgestnkwrthzubpbnbhqwehocpljauxqsnlmoapojvu
       base-url: https://api.siliconflow.cn
       chat:
         options:

@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://47.118.23.183:5432/test
+    username: postgres
+    password: zAzHHplnxXb7QvT02QMl0oPV
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      initialization-fail-timeout: -1
+logging:
+  level:
+    org.springframework.jdbc.core: DEBUG   # 打印 JDBC SQL
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE # 打印参数绑定
