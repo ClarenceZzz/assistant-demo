@@ -10,3 +10,4 @@ logging:
   level:
     org.springframework.jdbc.core: DEBUG   # 打印 JDBC SQL
     org.springframework.jdbc.core.StatementCreatorUtils: TRACE # 打印参数绑定
+    org.springframework.ai.chat.client.advisor: DEBUG

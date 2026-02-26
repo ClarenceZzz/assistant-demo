@@ -13,18 +13,18 @@ public class JdbcChatMemoryConfiguration {
     @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        String sql = "CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (\n" +
-                "    conversation_id VARCHAR(36) NOT NULL,\n" +
-                "    content TEXT NOT NULL,\n" +
-                "    type VARCHAR(10) NOT NULL CHECK (type IN ('USER', 'ASSISTANT', 'SYSTEM', 'TOOL')),\n" +
-                "    \"timestamp\" TIMESTAMP NOT NULL\n" +
-                ");\n" +
-                "CREATE INDEX IF NOT EXISTS SPRING_AI_CHAT_MEMORY_CONVERSATION_ID_TIMESTAMP_IDX\n" +
-                "ON SPRING_AI_CHAT_MEMORY(conversation_id, \"timestamp\");";
-        jdbcTemplate.execute(sql);
-    }
+    // @jakarta.annotation.PostConstruct
+    // public void init() {
+    //     String sql = "CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (\n" +
+    //             "    conversation_id VARCHAR(36) NOT NULL,\n" +
+    //             "    content TEXT NOT NULL,\n" +
+    //             "    type VARCHAR(10) NOT NULL CHECK (type IN ('USER', 'ASSISTANT', 'SYSTEM', 'TOOL')),\n" +
+    //             "    \"timestamp\" TIMESTAMP NOT NULL\n" +
+    //             ");\n" +
+    //             "CREATE INDEX IF NOT EXISTS SPRING_AI_CHAT_MEMORY_CONVERSATION_ID_TIMESTAMP_IDX\n" +
+    //             "ON SPRING_AI_CHAT_MEMORY(conversation_id, \"timestamp\");";
+    //     jdbcTemplate.execute(sql);
+    // }
 
     @Bean
     ChatMemory chatMemory(JdbcChatMemoryRepository chatMemoryRepository) {

@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import reactor.core.publisher.Flux;
 
 @RestController
+@RequestMapping("/chatmodel")
 public class ChatModelController {
     @Autowired
     private OpenAiChatModel chatModel;
@@ -28,7 +29,6 @@ public class ChatModelController {
 
         return response.getResult().getOutput().getText();
     }
-
 
     @RequestMapping("/stream/chat")
     public Flux<String> streamChat(@RequestParam(value = "message") String message, HttpServletResponse response) {

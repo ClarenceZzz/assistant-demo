@@ -20,7 +20,7 @@ import reactor.core.publisher.Flux;
 public class JdbcChatMemoryController implements InitializingBean {
 
     @Autowired
-    private ChatModel chatModel;
+    private OpenAiChatModel chatModel;
 
     private ChatClient chatClient;
 
