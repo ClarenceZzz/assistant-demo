@@ -48,7 +48,6 @@ public class ChatMemoryController {
     @GetMapping("/messageList")
     public String messageList(HttpServletResponse response) {
         List<Message> messages = new ArrayList<>();
-        //第一轮对话
         messages.add(new SystemMessage("你负责帮助用户根据现有材料规划菜谱"));
         messages.add(new UserMessage("我有一块鸡肉"));
         messages.add(new AssistantMessage("好的，我知道了，你有一块鸡肉，请问你还准备了什么材料？"));

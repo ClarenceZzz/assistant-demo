@@ -1,5 +1,7 @@
 package com.example.springai.controller;
 
+import java.util.List;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -7,11 +9,16 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.example.springai.model.Book;
 
 import jakarta.servlet.http.HttpServletResponse;
 import reactor.core.publisher.Flux;
@@ -67,5 +74,20 @@ public class ChatClientController {
                 }
                 return rsp.getResult().getOutput().getText() != null ? rsp.getResult().getOutput().getText() : "";
             });
+    }
+
+    @GetMapping("/converter")
+    public String converter(HttpServletResponse response) {
+        Book book = chatClient.prompt("请帮我推荐一本java相关的书").system("你是一个专业的图书推荐人员").call().entity(Book.class);
+        return JSON.toJSONString(book);
+    }
+
+    @GetMapping("/converterList")
+    public String converterList(HttpServletResponse response) {
+        List<Book> books = chatClient.prompt("请帮我推荐几本java相关的书")
+                .system("你是一个专业的图书推荐人员")
+                .call()
+                .entity(new ParameterizedTypeReference<List<Book>>() {});
+        return JSONArray.toJSONString(books);
     }
 }

@@ -11,11 +11,13 @@ spring:
       enabled: ALWAYS 
   ai:
     openai:
-      api-key: sk-mnlvoqgestnkwrthzubpbnbhqwehocpljauxqsnlmoapojvu
+      api-key: sk-hzupjaizrzbdmzzdaejsxhqnlbvsrbaiqfbmrrpzvdobcdyl
       base-url: https://api.siliconflow.cn
       chat:
         options:
-          model: Qwen/Qwen3-VL-32B-Thinking
+          model: zai-org/GLM-4.6V
+          # model: zai-org/GLM-4.5-Air
+          # model: Qwen/Qwen3-VL-32B-Thinking
           # model: deepseek-ai/DeepSeek-V3.2
     dashscope:
       api-key: ${DASHSCOPE_API_KEY}
