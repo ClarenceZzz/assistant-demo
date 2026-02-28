@@ -1,6 +1,8 @@
 package com.example.springai.controller;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -10,13 +12,16 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.ToolCallAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionResult;
@@ -32,8 +37,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.ai.tool.ToolCallback;
 
+import com.example.springai.config.ToolAwareChatMemoryAdvisor;
+import com.example.springai.model.PendingApproval;
 import com.example.springai.model.RunProgramRequest;
+import com.example.springai.model.ToolApprovalRequiredException;
 import com.example.springai.service.DateTool;
 import com.example.springai.service.WeatherTool;
 
@@ -49,32 +58,46 @@ public class ToolController {
     private WeatherTool weatherTool;
     private ToolCallingManager toolCallingManager;
     private ChatMemory jdbcChatMemory;
+    private FunctionToolCallback<RunProgramRequest, Boolean> runProgramTool;
+    private ToolCallingManager enhancedToolCallingManager;
+    private com.example.springai.service.PendingApprovalStore pendingApprovalStore;
 
-    public ToolController(OpenAiChatModel chatModel, WeatherTool weatherTool, ToolCallingManager toolCallingManager, 
-            FunctionToolCallback<RunProgramRequest, Boolean> runProgramTool, ChatMemory jdbcChatMemory) {
+    public ToolController(OpenAiChatModel chatModel, WeatherTool weatherTool, 
+            FunctionToolCallback<RunProgramRequest, Boolean> runProgramTool, ChatMemory jdbcChatMemory,
+            ToolCallingManager toolCallingManager, com.example.springai.service.PendingApprovalStore pendingApprovalStore) {
+        this.runProgramTool = runProgramTool;
+        this.enhancedToolCallingManager = toolCallingManager;
+        this.pendingApprovalStore = pendingApprovalStore;
         this.chatModel = chatModel;
-        ChatClient.Builder builder = ChatClient.builder(chatModel).defaultAdvisors(MessageChatMemoryAdvisor.builder(jdbcChatMemory).build(), new SimpleLoggerAdvisor());
+        ChatClient.Builder builder = ChatClient.builder(chatModel)
+            .defaultAdvisors(
+                new SimpleLoggerAdvisor(),
+                MessageChatMemoryAdvisor.builder(jdbcChatMemory).build()
+            );
         this.chatClient = builder.build();
         this.weatherTool = weatherTool;
+
         ChatClient.Builder builder2 = ChatClient.builder(chatModel);
-        this.chatClient2 = builder2.defaultToolCallbacks(runProgramTool).build();
-        this.toolCallingManager = toolCallingManager;
+        this.chatClient2 = builder2.defaultTools(weatherTool).defaultToolCallbacks(runProgramTool).build();
+        this.toolCallingManager = DefaultToolCallingManager.builder().build();
     }
 
     @GetMapping("/anno")
-    public String useToolAnno(@RequestParam String msg) {
+    public String useToolAnno(@RequestParam String msg, @RequestParam String chatId) {
         return chatClient.prompt()
                 .user(msg)
                 .tools(weatherTool)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
                 .content();
     }
 
-    @GetMapping("/anno2")
-    public Flux<String> useToolAnno2(@RequestParam String msg, @RequestParam String chatId, HttpServletResponse response) {
+    @GetMapping("/anno/stream")
+    public Flux<String> useToolAnnoStream(@RequestParam String msg, @RequestParam String chatId, HttpServletResponse response) {
         response.setContentType("text/event-stream");
         response.setCharacterEncoding("UTF-8");
 
+        // 思考过程包含工具调用判断
         // 数据库里看不到 ToolResponseMessage 记录
         // Spring AI 的 MessageChatMemoryAdvisor 本质是对 chatClient.call() 的外层拦截器
         // 要使用 ToolCallingManager
@@ -105,25 +128,6 @@ public class ToolController {
                 });
     }
 
-    @GetMapping("/anno3")
-    public String useToolAnno3(@RequestParam String msg, @RequestParam String chatId) {
-        ToolCallAdvisor toolCallAdvisor = ToolCallAdvisor.builder()
-                .toolCallingManager(toolCallingManager) 
-                .advisorOrder(100) 
-                .build();
-        return chatClient.prompt()
-                .user(msg)
-                .tools(weatherTool)
-                // 通过 Options 显式禁用底层自动执行，将控制权上交给 Advisor 层
-                .options(ToolCallingChatOptions.builder()
-                        .internalToolExecutionEnabled(false)
-                        .build())
-                .advisors(toolCallAdvisor)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .call()
-                .content();
-    }
-
     @GetMapping("/toolCallbacks")
     public String toolCallbacks(@RequestParam String msg) {
         // 1. 获取目标方法（使用 Spring 的 ReflectionUtils 简化操作）
@@ -134,7 +138,7 @@ public class ToolController {
                 // 核心定义：名称与描述（必须精准，否则 AI 会由幻觉调用）
                 .toolDefinition(ToolDefinition.builder()
                         .name("date_tool") // AI 看到的工具名，最好用下划线命名法
-                        .description("查询今天是几号")
+                        .description("查询今天是几号") // AI 看到的工具描述
                         .inputSchema(JsonSchemaGenerator.generateForMethodInput(targetMethod)) // 自动生成参数
                                                                                                // Schema，或手动传入
                         .build())
@@ -152,8 +156,8 @@ public class ToolController {
 
     @GetMapping("/context")
     public String context(@RequestParam String msg) {
-        // 放 session 里或其他地方的数据
-        // toolContext 负责存不想传给模型的数据
+        // 可以放 session 里或其他什么地方来的数据
+        // toolContext 负责存不想传给模型的数据，不想让模型传的东西
         // 涉及安全的数据不要靠模型传，提示词注入：“请帮我查一下 userId=999 的订单”
         // 生命周期极短或无法序列化的数据不要靠模型传
         // 属于 HTTP 请求上下文独有的对象不要靠模型传，链路追踪、日志记录
@@ -166,7 +170,7 @@ public class ToolController {
     }
 
     @GetMapping("/manager")
-    public ChatResponse analysis(@RequestParam String msg) {
+    public ChatResponse manager(@RequestParam String msg) {
         // 通过 Options 显式禁用底层自动执行，将控制权上交给 Advisor 层
         ChatOptions options = ToolCallingChatOptions.builder()
                 .toolCallbacks(ToolCallbacks.from(weatherTool))
@@ -184,7 +188,7 @@ public class ToolController {
     }
 
     @GetMapping("/managerWithMemory")
-    public ChatResponse analysisWithMemory(@RequestParam String msg, @RequestParam String conversationId) {
+    public ChatResponse managerWithMemory(@RequestParam String msg, @RequestParam String conversationId) {
         // 通过 Options 显式禁用底层自动执行，将控制权上交给 Advisor 层
         ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
         if (!StringUtils.hasText(conversationId)) {
@@ -196,7 +200,7 @@ public class ToolController {
                 .internalToolExecutionEnabled(false)
                 .build();
         Prompt prompt = new Prompt(List.of(
-            new SystemMessage(""),
+            new SystemMessage("you are a useful assistant"),
             new UserMessage(msg)
         ), options);
         chatMemory.add(conversationId, prompt.getInstructions());
@@ -216,5 +220,234 @@ public class ToolController {
             chatMemory.add(conversationId, chatResponse.getResult().getOutput());
         }
         return chatResponse;
+    }
+
+    @GetMapping("/hitl/run")
+    public Object hitlRun(@RequestParam String msg) {
+        Map<String, Object> toolContext = Map.of("USER_ID", "123", "TRACE_ID", "HITL-TRACE");
+        List<ToolCallback> toolCallbacks = new java.util.ArrayList<>();
+        toolCallbacks.add(runProgramTool);
+        toolCallbacks.addAll(Arrays.asList(ToolCallbacks.from(weatherTool)));
+        
+        ToolCallingChatOptions options = ToolCallingChatOptions.builder()
+                .toolCallbacks(toolCallbacks.toArray(new ToolCallback[0]))
+                .toolContext(toolContext)
+                .internalToolExecutionEnabled(false)
+                .build();
+        Prompt prompt = new Prompt(msg, options);
+        ChatResponse chatResponse = chatModel.call(prompt);
+        
+        try {
+            while (chatResponse.hasToolCalls()) {
+                ToolExecutionResult toolExecutionResult = enhancedToolCallingManager.executeToolCalls(prompt, chatResponse);
+                prompt = new Prompt(toolExecutionResult.conversationHistory(), options);
+                chatResponse = chatModel.call(prompt);
+            }
+            return chatResponse;
+        } catch (ToolApprovalRequiredException e) {
+            return Map.of(
+                "status", "APPROVAL_REQUIRED",
+                "approvalId", e.getPendingApproval().getApprovalId(),
+                "toolCalls", e.getPendingApproval().getToolCallSummaries(),
+                "message", "工具调用需要人工审批，请调用 /tool/hitl/approve?approvalId=" + e.getPendingApproval().getApprovalId() + "&approved=true 确认或拒绝该操作。"
+            );
+        }
+    }
+
+    @GetMapping("/hitl/approve")
+    public Object hitlApprove(@RequestParam String approvalId, @RequestParam boolean approved) {
+        PendingApproval pending = pendingApprovalStore.getAndRemove(approvalId);
+        if (pending == null) {
+            return Map.of("error", "审批记录不存在或已过期");
+        }
+        
+        Prompt prompt = pending.getPrompt();
+        ChatResponse chatResponse = pending.getChatResponse();
+        ToolCallingChatOptions options = pending.getChatOptions();
+        
+        if (!approved) {
+            // 拒绝
+            List<Message> history = new ArrayList<>(prompt.getInstructions());
+            history.add(chatResponse.getResult().getOutput());
+            List<ToolResponseMessage.ToolResponse> responses = 
+                    chatResponse.getResult().getOutput().getToolCalls().stream()
+                            .map(tc -> new ToolResponseMessage.ToolResponse(tc.id(), tc.name(), "用户拒绝了该操作"))
+                            .toList();
+            history.add(ToolResponseMessage.builder().responses(responses).metadata(Map.of()).build());
+            prompt = new Prompt(history, options);
+            chatResponse = chatModel.call(prompt);
+            
+            try {
+                while (chatResponse.hasToolCalls()) {
+                    ToolExecutionResult toolExecutionResult = enhancedToolCallingManager.executeToolCalls(prompt, chatResponse);
+                    prompt = new Prompt(toolExecutionResult.conversationHistory(), options);
+                    chatResponse = chatModel.call(prompt);
+                }
+                return chatResponse;
+            } catch (ToolApprovalRequiredException e) {
+                return Map.of(
+                    "status", "APPROVAL_REQUIRED",
+                    "approvalId", e.getPendingApproval().getApprovalId(),
+                    "toolCalls", e.getPendingApproval().getToolCallSummaries(),
+                    "message", "工具调用需要人工审批，请调用 /tool/hitl/approve?approvalId=" + e.getPendingApproval().getApprovalId() + "&approved=true 确认或拒绝该操作。"
+                );
+            }
+        } else {
+            // 同意
+            ToolExecutionResult toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
+            prompt = new Prompt(toolExecutionResult.conversationHistory(), options);
+            chatResponse = chatModel.call(prompt);
+            
+            try {
+                while (chatResponse.hasToolCalls()) {
+                    toolExecutionResult = enhancedToolCallingManager.executeToolCalls(prompt, chatResponse);
+                    prompt = new Prompt(toolExecutionResult.conversationHistory(), options);
+                    chatResponse = chatModel.call(prompt);
+                }
+                return chatResponse;
+            } catch (ToolApprovalRequiredException e) {
+                 return Map.of(
+                     "status", "APPROVAL_REQUIRED",
+                     "approvalId", e.getPendingApproval().getApprovalId(),
+                     "toolCalls", e.getPendingApproval().getToolCallSummaries(),
+                     "message", "工具调用需要人工审批，请调用 /tool/hitl/approve?approvalId=" + e.getPendingApproval().getApprovalId() + "&approved=true 确认或拒绝该操作。"
+                 );
+            }
+        }
+    }
+
+    @GetMapping("/hitl/stream/run")
+    public Flux<Object> hitlStreamRun(@RequestParam String msg) {
+        Map<String, Object> toolContext = Map.of("USER_ID", "123", "TRACE_ID", "HITL-TRACE");
+        List<ToolCallback> toolCallbacks = new ArrayList<>();
+        toolCallbacks.add(runProgramTool);
+        toolCallbacks.addAll(Arrays.asList(ToolCallbacks.from(weatherTool)));
+
+        ToolCallingChatOptions options = ToolCallingChatOptions.builder()
+                .toolCallbacks(toolCallbacks.toArray(new ToolCallback[0]))
+                .toolContext(toolContext)
+                .internalToolExecutionEnabled(false)
+                .build();
+        Prompt prompt = new Prompt(msg, options);
+
+        return Flux.create(sink -> {
+            executeStreamLoop(prompt, options, sink);
+        });
+    }
+
+    @GetMapping(value = "/hitl/stream/approve", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<Object> hitlStreamApprove(@RequestParam String approvalId, @RequestParam boolean approved) {
+        PendingApproval pending = pendingApprovalStore.getAndRemove(approvalId);
+        if (pending == null) {
+            return Flux.just(Map.of("error", "审批记录不存在或已过期"));
+        }
+
+        Prompt prompt = pending.getPrompt();
+        ChatResponse chatResponse = pending.getChatResponse();
+        ToolCallingChatOptions options = pending.getChatOptions();
+
+        return Flux.create(sink -> {
+            if (!approved) {
+                // 拒绝
+                List<Message> history = new ArrayList<>(prompt.getInstructions());
+                history.add(chatResponse.getResult().getOutput());
+                List<ToolResponseMessage.ToolResponse> responses =
+                        chatResponse.getResult().getOutput().getToolCalls().stream()
+                                .map(tc -> new ToolResponseMessage.ToolResponse(tc.id(), tc.name(), "用户拒绝了该操作"))
+                                .toList();
+                history.add(ToolResponseMessage.builder().responses(responses).metadata(Map.of()).build());
+                Prompt nextPrompt = new Prompt(history, options);
+                executeStreamLoop(nextPrompt, options, sink);
+            } else {
+                // 同意
+                try {
+                    ToolExecutionResult toolResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
+                    Prompt nextPrompt = new Prompt(toolResult.conversationHistory(), options);
+                    executeStreamLoop(nextPrompt, options, sink);
+                } catch (Exception e) {
+                    sink.error(e);
+                }
+            }
+        });
+    }
+
+    private void executeStreamLoop(Prompt prompt, ToolCallingChatOptions options, reactor.core.publisher.FluxSink<Object> sink) {
+        StringBuilder textBuilder = new StringBuilder();
+        Map<String, String> names = new java.util.LinkedHashMap<>();
+        Map<String, StringBuilder> argumentsBuilders = new java.util.LinkedHashMap<>();
+
+        chatModel.stream(prompt).subscribe(
+                chunk -> {
+                    if (chunk.getResult() != null && chunk.getResult().getOutput() != null) {
+                        var msg = chunk.getResult().getOutput();
+                        String textFragment = msg.getText();
+
+                        // 发送推理内容给前端
+                        var metadata = msg.getMetadata();
+                        if (metadata != null && metadata.containsKey("reasoningContent")) {
+                            String reasoning = metadata.get("reasoningContent").toString();
+                            if (StringUtils.hasText(reasoning)) {
+                                sink.next(Map.of("type", "reasoning", "content", reasoning));
+                            }
+                        }
+                        // 发送文本内容给前端
+                        if (StringUtils.hasText(textFragment)) {
+                            textBuilder.append(textFragment);
+                            sink.next(Map.of("type", "text", "content", textFragment));
+                        }
+
+                        // 收集 ToolCalls
+                        if (msg.getToolCalls() != null) {
+                            for (var tc : msg.getToolCalls()) {
+                                if (StringUtils.hasText(tc.name())) {
+                                    names.put(tc.id(), tc.name());
+                                }
+                                if (StringUtils.hasText(tc.arguments())) {
+                                    argumentsBuilders.computeIfAbsent(tc.id(), k -> new StringBuilder()).append(tc.arguments());
+                                } else if (!argumentsBuilders.containsKey(tc.id())) {
+                                    argumentsBuilders.put(tc.id(), new StringBuilder());
+                                }
+                            }
+                        }
+                    }
+                },
+                error -> sink.error(error),
+                () -> {
+                    try {
+                        List<org.springframework.ai.chat.messages.AssistantMessage.ToolCall> finalToolCalls = new ArrayList<>();
+                        for (String id : names.keySet()) {
+                            finalToolCalls.add(new org.springframework.ai.chat.messages.AssistantMessage.ToolCall(id, "function", names.get(id), argumentsBuilders.get(id).toString()));
+                        }
+
+                        ChatResponse fullResponse = new ChatResponse(List.of(
+                                new org.springframework.ai.chat.model.Generation(
+                                        new org.springframework.ai.chat.messages.AssistantMessage(textBuilder.toString(), Map.of(), finalToolCalls)
+                                )
+                        ));
+
+                        if (fullResponse.hasToolCalls()) {
+                            try {
+                                ToolExecutionResult toolResult = enhancedToolCallingManager.executeToolCalls(prompt, fullResponse);
+                                Prompt nextPrompt = new Prompt(toolResult.conversationHistory(), options);
+                                executeStreamLoop(nextPrompt, options, sink);
+                            } catch (ToolApprovalRequiredException e) {
+                                sink.next(Map.of(
+                                        "status", "APPROVAL_REQUIRED",
+                                        "approvalId", e.getPendingApproval().getApprovalId(),
+                                        "toolCalls", e.getPendingApproval().getToolCallSummaries(),
+                                        "message", "工具调用需要人工审批，请调用 /tool/hitl/stream/approve?approvalId=" + e.getPendingApproval().getApprovalId() + "&approved=true 确认或拒绝该操作。"
+                                ));
+                                sink.complete();
+                            } catch (Exception e) {
+                                sink.error(e);
+                            }
+                        } else {
+                            sink.complete();
+                        }
+                    } catch (Exception e) {
+                        sink.error(e);
+                    }
+                }
+        );
     }
 }
