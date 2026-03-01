@@ -18,12 +18,18 @@
     <modules>
         <module>rag</module>
         <module>springai</module>
+        <module>mcp/mcp-client</module>
+        <module>mcp/mcp-server-sse</module>
+        <module>mcp/mcp-server-sse-https</module>
+        <module>mcp/mcp-server-stdio</module>
+        <module>mcp/mcp-server-streamable</module>
     </modules>
 
     <properties>
         <java.version>17</java.version>
         <spring-ai.version>1.1.2</spring-ai.version>
         <spring.ai.alibaba.version>1.1.2.0</spring.ai.alibaba.version>
+        <fastjson.version>2.0.43</fastjson.version>
     </properties>
 
     <dependencyManagement>

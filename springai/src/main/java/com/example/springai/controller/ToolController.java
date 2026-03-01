@@ -3,6 +3,7 @@ package com.example.springai.controller;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,11 +15,13 @@ import org.springframework.ai.chat.client.advisor.ToolCallAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.DefaultToolCallingManager;
@@ -31,6 +34,7 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.ai.util.json.schema.JsonSchemaGenerator;
+import org.springframework.http.MediaType;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ai.tool.ToolCallback;
+import reactor.core.publisher.FluxSink;
 
 import com.example.springai.config.ToolAwareChatMemoryAdvisor;
 import com.example.springai.model.PendingApproval;
@@ -45,6 +50,7 @@ import com.example.springai.model.RunProgramRequest;
 import com.example.springai.model.ToolApprovalRequiredException;
 import com.example.springai.service.DateTool;
 import com.example.springai.service.WeatherTool;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletResponse;
 import reactor.core.publisher.Flux;
@@ -316,8 +322,10 @@ public class ToolController {
         }
     }
 
-    @GetMapping("/hitl/stream/run")
-    public Flux<Object> hitlStreamRun(@RequestParam String msg) {
+    @GetMapping(value = "/hitl/stream/run")
+    public Flux<String> hitlStreamRun(@RequestParam String msg, HttpServletResponse response) {
+        response.setContentType("text/event-stream");
+        response.setCharacterEncoding("UTF-8");
         Map<String, Object> toolContext = Map.of("USER_ID", "123", "TRACE_ID", "HITL-TRACE");
         List<ToolCallback> toolCallbacks = new ArrayList<>();
         toolCallbacks.add(runProgramTool);
@@ -335,11 +343,13 @@ public class ToolController {
         });
     }
 
-    @GetMapping(value = "/hitl/stream/approve", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<Object> hitlStreamApprove(@RequestParam String approvalId, @RequestParam boolean approved) {
+    @GetMapping(value = "/hitl/stream/approve")
+    public Flux<String> hitlStreamApprove(@RequestParam String approvalId, @RequestParam boolean approved, HttpServletResponse response) {
+        response.setContentType("text/event-stream");
+        response.setCharacterEncoding("UTF-8");
         PendingApproval pending = pendingApprovalStore.getAndRemove(approvalId);
         if (pending == null) {
-            return Flux.just(Map.of("error", "审批记录不存在或已过期"));
+            return Flux.just("{\"error\":\"审批记录不存在或已过期\"}");
         }
 
         Prompt prompt = pending.getPrompt();
@@ -371,7 +381,7 @@ public class ToolController {
         });
     }
 
-    private void executeStreamLoop(Prompt prompt, ToolCallingChatOptions options, reactor.core.publisher.FluxSink<Object> sink) {
+    private void executeStreamLoop(Prompt prompt, ToolCallingChatOptions options, FluxSink<String> sink) {
         StringBuilder textBuilder = new StringBuilder();
         Map<String, String> names = new java.util.LinkedHashMap<>();
         Map<String, StringBuilder> argumentsBuilders = new java.util.LinkedHashMap<>();
@@ -382,21 +392,21 @@ public class ToolController {
                         var msg = chunk.getResult().getOutput();
                         String textFragment = msg.getText();
 
-                        // 发送推理内容给前端
+                        // 思考过程
                         var metadata = msg.getMetadata();
                         if (metadata != null && metadata.containsKey("reasoningContent")) {
                             String reasoning = metadata.get("reasoningContent").toString();
                             if (StringUtils.hasText(reasoning)) {
-                                sink.next(Map.of("type", "reasoning", "content", reasoning));
+                                sink.next(reasoning);
                             }
                         }
-                        // 发送文本内容给前端
+                        // 回答
                         if (StringUtils.hasText(textFragment)) {
                             textBuilder.append(textFragment);
-                            sink.next(Map.of("type", "text", "content", textFragment));
+                            sink.next(textFragment);
                         }
 
-                        // 收集 ToolCalls
+                        // ToolCalls
                         if (msg.getToolCalls() != null) {
                             for (var tc : msg.getToolCalls()) {
                                 if (StringUtils.hasText(tc.name())) {
@@ -414,14 +424,15 @@ public class ToolController {
                 error -> sink.error(error),
                 () -> {
                     try {
-                        List<org.springframework.ai.chat.messages.AssistantMessage.ToolCall> finalToolCalls = new ArrayList<>();
+                        List<AssistantMessage.ToolCall> finalToolCalls = new ArrayList<>();
                         for (String id : names.keySet()) {
-                            finalToolCalls.add(new org.springframework.ai.chat.messages.AssistantMessage.ToolCall(id, "function", names.get(id), argumentsBuilders.get(id).toString()));
+                            finalToolCalls.add(new AssistantMessage.ToolCall(id, "function", names.get(id), argumentsBuilders.get(id).toString()));
                         }
-
+                        
+                        Map<String, Object> emptyMap = new HashMap<>();
                         ChatResponse fullResponse = new ChatResponse(List.of(
-                                new org.springframework.ai.chat.model.Generation(
-                                        new org.springframework.ai.chat.messages.AssistantMessage(textBuilder.toString(), Map.of(), finalToolCalls)
+                                new Generation(
+                                        AssistantMessage.builder().content(textBuilder.toString()).properties(emptyMap).toolCalls(finalToolCalls).build()
                                 )
                         ));
 
@@ -431,12 +442,16 @@ public class ToolController {
                                 Prompt nextPrompt = new Prompt(toolResult.conversationHistory(), options);
                                 executeStreamLoop(nextPrompt, options, sink);
                             } catch (ToolApprovalRequiredException e) {
-                                sink.next(Map.of(
-                                        "status", "APPROVAL_REQUIRED",
-                                        "approvalId", e.getPendingApproval().getApprovalId(),
-                                        "toolCalls", e.getPendingApproval().getToolCallSummaries(),
-                                        "message", "工具调用需要人工审批，请调用 /tool/hitl/stream/approve?approvalId=" + e.getPendingApproval().getApprovalId() + "&approved=true 确认或拒绝该操作。"
-                                ));
+                                try {
+                                    sink.next(new ObjectMapper().writeValueAsString(Map.of(
+                                            "status", "APPROVAL_REQUIRED",
+                                            "approvalId", e.getPendingApproval().getApprovalId(),
+                                            "toolCalls", e.getPendingApproval().getToolCallSummaries(),
+                                            "message", "工具调用需要人工审批，请调用 /tool/hitl/stream/approve?approvalId=" + e.getPendingApproval().getApprovalId() + "&approved=true 确认或拒绝该操作。"
+                                    )));
+                                } catch (Exception ex) {
+                                    sink.error(ex);
+                                }
                                 sink.complete();
                             } catch (Exception e) {
                                 sink.error(e);
