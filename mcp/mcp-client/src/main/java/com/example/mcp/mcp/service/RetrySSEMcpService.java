@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@Service
+// @Service
 @Slf4j
 public class RetrySSEMcpService {
 

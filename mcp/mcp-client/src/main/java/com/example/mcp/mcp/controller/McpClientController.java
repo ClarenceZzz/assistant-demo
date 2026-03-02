@@ -20,8 +20,8 @@ public class McpClientController {
     @Autowired
     private ManualMcpClientService manualMcpClientService;
 
-    @Autowired
-    private RetrySSEMcpService retrySSEMcpService;
+    // @Autowired
+    // private RetrySSEMcpService retrySSEMcpService;
 
     @GetMapping("/callTool")
     public Object callTool(@RequestParam("type") String type) {
@@ -43,10 +43,9 @@ public class McpClientController {
         return manualMcpClientService.chat(query);
     }
 
-    @GetMapping("/retryChat")
-    public String retry(@RequestParam("query") String query) {
-        log.info("retry chat request => {}", query);
-
-        return retrySSEMcpService.chat(query);
-    }
+    // @GetMapping("/retryChat")
+    // public String retry(@RequestParam("query") String query) {
+    //     log.info("retry chat request => {}", query);
+    //     return retrySSEMcpService.chat(query);
+    // }
 }

@@ -59,6 +59,7 @@ public class McpClientService {
         }
         return null;
     }
+
     @PostConstruct
     public void init() {
         ToolCallback[] toolCallbacks = toolCallbackProvider.getToolCallbacks();
@@ -67,9 +68,9 @@ public class McpClientService {
                 .defaultToolCallbacks(toolCallbacks)
                 .build();
 
-//        this.chatClient = ChatClient.builder(chatModel)
-//                .defaultTools(new WeatherService())
-//                .build();
+        // this.chatClient = ChatClient.builder(chatModel)
+        //         .defaultTools(new WeatherService())
+        //         .build();
     }
 
     /**

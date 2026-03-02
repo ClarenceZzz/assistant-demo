@@ -5,7 +5,7 @@ spring:
     name: MCP_Client
   ai:
     openai:
-      api-key:
+      api-key: 
       base-url: https://dashscope.aliyuncs.com/compatible-mode/
       chat:
         options:
@@ -27,15 +27,15 @@ spring:
         #         - -jar
         #         - "D:\\LLMentor\\LLMentor\\mcp\\mcp-server-stdio\\target\\mcp-server-stdio-1.0.0-SNAPSHOT.jar"
 ##          servers-configuration: classpath:/mcp-servers.json
-        sse:
-          connections:
-            weather-sse:
-              # url: http://127.0.0.1:8003/
-              # sse-endpoint: sse
-              url: http://localhost:8003
-              sse-endpoint: /sse
-        # streamable-http:
+        # sse:
         #   connections:
-        #     weather-streamable:
-        #       url: http://127.0.0.1:8004/stream/test/
-        #       endpoint: api/mcp
+        #     weather-sse:
+        #       # url: http://127.0.0.1:8003/
+        #       # sse-endpoint: sse
+        #       url: http://localhost:8003
+        #       sse-endpoint: /sse
+        streamable-http:
+          connections:
+            weather-streamable:
+              url: http://localhost:8004/stream/test/
+              endpoint: api/mcp
