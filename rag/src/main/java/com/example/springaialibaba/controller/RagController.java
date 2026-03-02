@@ -37,9 +37,9 @@ public class RagController {
 
     private static final Logger log = LoggerFactory.getLogger(RagController.class);
 
-    private static final String DEFAULT_PERSONA = "default";
+    private static final String DEFAULT_PERSONA = "客服";
 
-    private static final String DEFAULT_CHANNEL = "generic";
+    private static final String DEFAULT_CHANNEL = "用户咨询";
 
     private static final String DEFAULT_USER_ID = "anonymous-user";
 
@@ -80,18 +80,23 @@ public class RagController {
                 resolveUserId(request));
         chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
 
+        // 查询预处理
+        // 清洗，去除首尾空格、转换为小写、移除不符合正则（字母/数字/汉字/标点）的噪音字符。
         log.info("收到 RAG 查询请求，问题长度={}", rawQuestion.length());
         String cleanedQuestion = queryPreprocessor.process(rawQuestion);
-        log.debug("预处理后的查询：{}", cleanedQuestion);
+        log.info("预处理后的查询：{}", cleanedQuestion);
 
+        // 筛选候选文档
         List<Document> documents = retrievalService.retrieveAndRerank(cleanedQuestion);
         log.info("检索到 {} 条候选文档", documents.size());
 
+        // 扮演的角色
         String persona = normaliseOptionalInput(request.getPersona(), DEFAULT_PERSONA);
+        // 用户提问的渠道
         String channel = normaliseOptionalInput(request.getChannel(), DEFAULT_CHANNEL);
 
         String answer = generationService.generate(rawQuestion, documents, persona, channel);
-        log.debug("生成的回答长度={}", answer != null ? answer.length() : 0);
+        log.info("生成的回答长度={}, 回答={}", answer != null ? answer.length() : 0, answer);
 
         Double topScore = extractTopScore(documents);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);

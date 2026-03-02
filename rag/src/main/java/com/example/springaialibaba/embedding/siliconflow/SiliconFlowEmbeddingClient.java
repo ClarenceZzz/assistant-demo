@@ -13,6 +13,7 @@ import org.springframework.ai.embedding.EmbeddingOptions;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.embedding.EmbeddingResponseMetadata;
+import org.springframework.context.annotation.Primary;
 import org.springframework.ai.chat.metadata.DefaultUsage;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +36,7 @@ import com.example.springaialibaba.embedding.siliconflow.model.SiliconFlowEmbedd
  * SiliconFlow Embedding API 的 Spring AI 适配器。
  */
 @Service
+@Primary
 public class SiliconFlowEmbeddingClient implements EmbeddingModel {
 
     private static final Logger log = LoggerFactory.getLogger(SiliconFlowEmbeddingClient.class);

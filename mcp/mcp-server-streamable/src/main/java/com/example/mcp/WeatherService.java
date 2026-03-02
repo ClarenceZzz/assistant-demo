@@ -25,7 +25,7 @@ public class WeatherService {
     }
 
     @Tool(
-            name = "query_weather_by_city&date",
+            name = "query_weather_by_city_and_date",
             description = "根据城市和日期获取天气信息"
     )
     public WeatherResponse queryWeather(WeatherRequest request) {

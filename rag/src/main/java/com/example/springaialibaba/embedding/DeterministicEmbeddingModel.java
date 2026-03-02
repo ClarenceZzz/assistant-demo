@@ -17,7 +17,7 @@ import org.springframework.util.Assert;
  * 基于文本内容生成确定性向量的本地嵌入模型，避免开发阶段依赖外部嵌入服务。
  */
 @Component
-@Primary
+// @Primary
 public class DeterministicEmbeddingModel implements EmbeddingModel {
 
     public static final int VECTOR_SIZE = 1536;

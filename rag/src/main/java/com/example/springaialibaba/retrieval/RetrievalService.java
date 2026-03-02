@@ -50,6 +50,9 @@ public class RetrievalService {
                 .query(query)
                 .topK(topK)
                 .build();
+        // 向量检索
+        // SiliconFlowEmbeddingClient.call 调接口 embedding 查询
+        // 在 VectorStore 中进行相似度搜索，获取初始候选池（Top-K）
         List<Document> documents = vectorStore.similaritySearch(searchRequest);
         return documents != null ? documents : Collections.emptyList();
     }
@@ -59,6 +62,7 @@ public class RetrievalService {
     }
 
     public List<Document> retrieveAndRerank(String query, int finalTopN) {
+        // 根据 msg 获取候选文档
         List<Document> initialDocuments = retrieve(query, Math.max(defaultInitialTopK, finalTopN));
         if (initialDocuments.isEmpty()) {
             return initialDocuments;
@@ -67,10 +71,12 @@ public class RetrievalService {
         if (targetSize == 0) {
             return Collections.emptyList();
         }
+        // 文档处理
         List<String> contents = initialDocuments.stream()
                 .map(this::resolveDocumentContent)
                 .collect(Collectors.toList());
         try {
+            // 文档 rerank
             List<RerankedDocument> rerankedDocuments = rerankClient.rerank(query, contents);
             if (rerankedDocuments.isEmpty()) {
                 return limitDocuments(initialDocuments, targetSize);
