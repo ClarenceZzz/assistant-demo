@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.alibaba.fastjson2.JSON;
+
 import org.springframework.util.StringUtils;
 
 
@@ -22,12 +25,21 @@ import reactor.core.publisher.Flux;
 public class ChatModelController {
     @Autowired
     private OpenAiChatModel chatModel;
-    
+
     @GetMapping("/chat")
     public String chat(@RequestParam(value = "message") String message) {
-        ChatResponse response = chatModel.call(new Prompt(message));
-
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+            .model("deepseek-ai/DeepSeek-V3") // 切换到另一个模型
+            .temperature(0.7)
+            .build();
+        ChatResponse response = chatModel.call(new Prompt(message, options));
         return response.getResult().getOutput().getText();
+    }
+    
+    @GetMapping("/chat/apiStructure")
+    public String chatApiStructure(@RequestParam(value = "message") String message) {
+        ChatResponse response = chatModel.call(new Prompt(message));
+        return JSON.toJSONString(response);
     }
 
     @RequestMapping("/stream/chat")
@@ -54,6 +66,20 @@ public class ChatModelController {
                     return metadata.get("reasoningContent").toString();
                 }
                 return rsp.getResult().getOutput().getText();
+            });
+    }
+
+    @RequestMapping("/stream/chat/apiStructure")
+    public Flux<String> streamChatApiStructure(@RequestParam(value = "message") String message, HttpServletResponse response) {
+        response.setContentType("text/event-stream");
+        response.setCharacterEncoding("UTF-8");
+        Prompt prompt = new Prompt(message);
+
+        Flux<ChatResponse> chatResponseFlux = chatModel.stream(prompt);
+
+        return chatResponseFlux
+            .map(rsp -> {
+                return JSON.toJSONString(rsp);
             });
     }
 }
