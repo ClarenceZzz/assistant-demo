@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.example.springai.config.ToolAwareChatMemoryAdvisor;
+import com.example.springai.config.SensitiveWordAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -45,10 +45,10 @@ public class ChatMemoryController {
         this.longTermChatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(jdbcChatMemory).build(), new SimpleLoggerAdvisor())
                 .build();
-        // ToolAwareChatMemoryAdvisor（order=0）排在最外层，先拦截敏感词
+        // SensitiveWordAdvisor（order=0）排在最外层，先拦截敏感词
         this.customAdvisorChatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(
-                        new ToolAwareChatMemoryAdvisor(Set.of("厦门")),
+                        new SensitiveWordAdvisor(Set.of("厦门")),
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),
                         new SimpleLoggerAdvisor()
                 )
@@ -109,7 +109,7 @@ public class ChatMemoryController {
                     .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                     .call()
                     .content();
-        } catch (ToolAwareChatMemoryAdvisor.SensitiveWordException e) {
+        } catch (SensitiveWordAdvisor.SensitiveWordException e) {
             // 用户输入命中敏感词，before() 短路，直接返回拒绝提示
             return e.getMessage();
         }

@@ -82,6 +82,19 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+
+        <!-- VectorStoreChatMemoryAdvisor 所在模块 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-advisors-vector-store</artifactId>
+        </dependency>
+
+        <!-- pgvector 向量数据库 starter（提供 PgVectorStore Bean） -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
+        </dependency>
+
         
         <dependency>
 			<groupId>org.projectlombok</groupId>

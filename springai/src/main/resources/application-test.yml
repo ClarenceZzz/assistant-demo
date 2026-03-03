@@ -6,6 +6,22 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       initialization-fail-timeout: -1
+  ai:
+    vectorstore:
+      pgvector:
+        # 是否自动初始化向量表
+        initialize-schema: false
+        # 向量维度：需与所用 Embedding 模型输出一致
+        # Qwen3-Embedding-8B 输出维度为 4096
+        dimensions: 4096
+        # 距离计算方式：COSINE（余弦相似度推荐）/ EUCLIDEAN / INNER_PRODUCT
+        distance-type: COSINE_DISTANCE
+  # 项目同时引入了 OpenAI / Dashscope / Ollama 三个 starter，导致有 3 个 EmbeddingModel Bean。
+  # PgVectorStore 只需要一个，这里关闭不用的两个，保留 openAiEmbeddingModel（用于 Qwen3-Embedding-8B）。
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeEmbeddingAutoConfiguration
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
 logging:
   level:
     org.springframework.jdbc.core: DEBUG   # 打印 JDBC SQL

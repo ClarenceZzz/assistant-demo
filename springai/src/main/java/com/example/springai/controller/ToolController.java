@@ -45,7 +45,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.FluxSink;
 
-import com.example.springai.config.ToolAwareChatMemoryAdvisor;
 import com.example.springai.model.PendingApproval;
 import com.example.springai.model.RunProgramRequest;
 import com.example.springai.model.ToolApprovalRequiredException;
