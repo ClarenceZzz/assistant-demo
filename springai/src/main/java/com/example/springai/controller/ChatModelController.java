@@ -28,9 +28,20 @@ public class ChatModelController {
 
     @GetMapping("/chat")
     public String chat(@RequestParam(value = "message") String message) {
+        ChatResponse response = chatModel.call(new Prompt(message));
+        return response.getResult().getOutput().getText();
+    }
+
+    @GetMapping("/chatOption")
+    public String chatOption(@RequestParam(value = "message") String message, @RequestParam(value = "temp") String temp) {
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-            .model("deepseek-ai/DeepSeek-V3") // 切换到另一个模型
-            .temperature(0.7)
+            .model("deepseek-ai/DeepSeek-V3.2") 
+            // 输出的随机程度
+            .temperature(Double.valueOf(temp))
+            // 限定模型单次响应可以生成的最大 Token 数量，影响回复长度
+            // .maxTokens(null)
+            // 流式输出
+            // .streamUsage(false)
             .build();
         ChatResponse response = chatModel.call(new Prompt(message, options));
         return response.getResult().getOutput().getText();

@@ -78,13 +78,18 @@ public class ChatClientController {
 
     @GetMapping("/converter")
     public String converter(HttpServletResponse response) {
-        Book book = chatClient.prompt("请帮我推荐一本java相关的书").system("你是一个专业的图书推荐人员").call().entity(Book.class);
+        Book book = chatClient
+            .prompt("请给我推荐一本java相关的书")
+            .system("你是一个专业的图书推荐人员")
+            .advisors(advisor -> advisor.param("model", "Qwen/Qwen3-235B-A22B-Instruct-2507"))
+            .call()
+            .entity(Book.class);
         return JSON.toJSONString(book);
     }
 
     @GetMapping("/converterList")
     public String converterList(HttpServletResponse response) {
-        List<Book> books = chatClient.prompt("请帮我推荐几本java相关的书")
+        List<Book> books = chatClient.prompt("请给我推荐几本java相关的书")
                 .system("你是一个专业的图书推荐人员")
                 .call()
                 .entity(new ParameterizedTypeReference<List<Book>>() {});

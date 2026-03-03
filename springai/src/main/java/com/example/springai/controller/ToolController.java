@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +50,7 @@ import com.example.springai.model.PendingApproval;
 import com.example.springai.model.RunProgramRequest;
 import com.example.springai.model.ToolApprovalRequiredException;
 import com.example.springai.service.DateTool;
+import com.example.springai.service.PendingApprovalStore;
 import com.example.springai.service.WeatherTool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -66,11 +68,11 @@ public class ToolController {
     private ChatMemory jdbcChatMemory;
     private FunctionToolCallback<RunProgramRequest, Boolean> runProgramTool;
     private ToolCallingManager enhancedToolCallingManager;
-    private com.example.springai.service.PendingApprovalStore pendingApprovalStore;
+    private PendingApprovalStore pendingApprovalStore;
 
     public ToolController(OpenAiChatModel chatModel, WeatherTool weatherTool, 
             FunctionToolCallback<RunProgramRequest, Boolean> runProgramTool, ChatMemory jdbcChatMemory,
-            ToolCallingManager toolCallingManager, com.example.springai.service.PendingApprovalStore pendingApprovalStore) {
+            ToolCallingManager toolCallingManager, PendingApprovalStore pendingApprovalStore) {
         this.runProgramTool = runProgramTool;
         this.enhancedToolCallingManager = toolCallingManager;
         this.pendingApprovalStore = pendingApprovalStore;
@@ -383,8 +385,8 @@ public class ToolController {
 
     private void executeStreamLoop(Prompt prompt, ToolCallingChatOptions options, FluxSink<String> sink) {
         StringBuilder textBuilder = new StringBuilder();
-        Map<String, String> names = new java.util.LinkedHashMap<>();
-        Map<String, StringBuilder> argumentsBuilders = new java.util.LinkedHashMap<>();
+        Map<String, String> names = new LinkedHashMap<>();
+        Map<String, StringBuilder> argumentsBuilders = new LinkedHashMap<>();
 
         chatModel.stream(prompt).subscribe(
                 chunk -> {

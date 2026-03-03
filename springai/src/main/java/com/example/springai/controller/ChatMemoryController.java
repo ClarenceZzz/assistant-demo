@@ -2,7 +2,9 @@ package com.example.springai.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import com.example.springai.config.ToolAwareChatMemoryAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -14,7 +16,6 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +32,7 @@ public class ChatMemoryController {
     private ChatClient chatClient;
     private ChatClient longTermChatClient;
     private ChatMemory jdbcChatMemory;
+    private ChatClient customAdvisorChatClient;
 
     @Autowired
     public ChatMemoryController(OpenAiChatModel chatModel, ChatMemory jdbcChatMemory) {
@@ -42,6 +44,14 @@ public class ChatMemoryController {
                         List.of(new SimpleLoggerAdvisor(), MessageChatMemoryAdvisor.builder(chatMemory).build())).build();
         this.longTermChatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(jdbcChatMemory).build(), new SimpleLoggerAdvisor())
+                .build();
+        // ToolAwareChatMemoryAdvisor（order=0）排在最外层，先拦截敏感词
+        this.customAdvisorChatClient = ChatClient.builder(chatModel)
+                .defaultAdvisors(
+                        new ToolAwareChatMemoryAdvisor(Set.of("厦门")),
+                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                        new SimpleLoggerAdvisor()
+                )
                 .build();
     }
 
@@ -79,5 +89,29 @@ public class ChatMemoryController {
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .stream().content();
+    }
+
+    /**
+     * 演示敏感词过滤效果：
+     * - 用户输入或模型回复包含敏感词时，返回 "我暂时无法回答这个问题"
+     * - 正常内容则正常返回模型回复
+     */
+    @GetMapping("/sensitiveFilter")
+    public String sensitiveFilter(@RequestParam String message,
+                                  @RequestParam(defaultValue = "demo") String chatId,
+                                  HttpServletResponse httpServletResponse) {
+        httpServletResponse.setCharacterEncoding("UTF-8");
+        try {
+            return customAdvisorChatClient
+                    .prompt()
+                    .system("you are a useful assistant")
+                    .user(message)
+                    .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                    .call()
+                    .content();
+        } catch (ToolAwareChatMemoryAdvisor.SensitiveWordException e) {
+            // 用户输入命中敏感词，before() 短路，直接返回拒绝提示
+            return e.getMessage();
+        }
     }
 }

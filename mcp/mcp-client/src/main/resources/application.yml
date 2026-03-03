@@ -25,7 +25,7 @@ spring:
         #       command: java
         #       args:
         #         - -jar
-        #         - "D:\\LLMentor\\LLMentor\\mcp\\mcp-server-stdio\\target\\mcp-server-stdio-1.0.0-SNAPSHOT.jar"
+        #         - "D:\\assistant-demo\\mcp\\mcp-server-stdio\\target\\mcp-server-stdio-1.0.0-SNAPSHOT.jar"
 ##          servers-configuration: classpath:/mcp-servers.json
         # sse:
         #   connections:
