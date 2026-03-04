@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.core.io.Resource;
@@ -14,6 +16,9 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+
+import com.example.springaialibaba.generation.GenerationService;
+
 import org.springframework.util.StreamUtils;
 import org.springframework.util.Assert;
 
@@ -22,6 +27,8 @@ import org.springframework.util.Assert;
  */
 @Service
 public class DynamicPromptBuilder {
+
+    private static final Logger log = LoggerFactory.getLogger(DynamicPromptBuilder.class);
 
     private final PromptProperties properties;
 
@@ -51,11 +58,20 @@ public class DynamicPromptBuilder {
         String resolvedChannel = resolveFallback(channel, properties.getDefaults().getChannel());
         String resolvedQuestion = Objects.toString(question, "");
         String resolvedContext = formatContext(context);
+        String resolvedTone = "保持礼貌但不过度热情，确保信息的传递效率是第一优先级的";
+        if (resolvedChannel.equals("生活闲聊")) {
+            resolvedTone = "轻松活泼，可以使用适量的表情符号和口语化的语气助词";
+        }
+        if (resolvedChannel.equals("售后服务")) {
+            resolvedTone = "普通咨询类问题，语气要干脆利落、热心引导。不需要道歉，只需要清晰地告知步骤。投诉/故障/报修类问题，使用温和且高度专业的语言，优先承认用户遇到的困难（共情），严禁推卸责任";
+        }
 
         String promptText = promptTemplate.replace("{persona}", resolvedPersona)
                 .replace("{channel}", resolvedChannel)
                 .replace("{question}", resolvedQuestion)
-                .replace("{context}", resolvedContext);
+                .replace("{context}", resolvedContext)
+                .replace("{tone}", resolvedTone);
+        log.info("Prompt: {}", promptText);
 
         return new Prompt(promptText);
     }

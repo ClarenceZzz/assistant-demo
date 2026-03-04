@@ -13,6 +13,7 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson2.JSON;
 import com.example.springaialibaba.rerank.RerankedDocument;
 import com.example.springaialibaba.rerank.siliconflow.RerankClient;
 
@@ -75,6 +76,8 @@ public class RetrievalService {
         List<String> contents = initialDocuments.stream()
                 .map(this::resolveDocumentContent)
                 .collect(Collectors.toList());
+        log.info("重排前 {}", JSON.toJSONString(contents));
+
         try {
             // 文档 rerank
             List<RerankedDocument> rerankedDocuments = rerankClient.rerank(query, contents);
@@ -96,6 +99,10 @@ public class RetrievalService {
             if (sortedDocuments.isEmpty()) {
                 return limitDocuments(initialDocuments, targetSize);
             }
+            List<String> contentsAfter = sortedDocuments.stream()
+                .map(this::resolveDocumentContent)
+                .collect(Collectors.toList());
+            log.info("重排后 {}", JSON.toJSONString(contentsAfter));
             return sortedDocuments;
         }
         catch (RuntimeException ex) {

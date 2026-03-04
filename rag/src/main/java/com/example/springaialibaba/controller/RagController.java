@@ -37,9 +37,9 @@ public class RagController {
 
     private static final Logger log = LoggerFactory.getLogger(RagController.class);
 
-    private static final String DEFAULT_PERSONA = "客服";
+    private static final String DEFAULT_PERSONA = "客服人员";
 
-    private static final String DEFAULT_CHANNEL = "用户咨询";
+    private static final String DEFAULT_CHANNEL = "售后服务";
 
     private static final String DEFAULT_USER_ID = "anonymous-user";
 
@@ -73,12 +73,12 @@ public class RagController {
             throw new IllegalArgumentException("question must not be blank");
         }
 
-        Long requestedSessionId = request != null ? request.getSessionId() : null;
-        ChatSession session = chatHistoryService.createOrGetSession(
-                Optional.ofNullable(requestedSessionId),
-                request.getQuestion(),
-                resolveUserId(request));
-        chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
+        // Long requestedSessionId = request != null ? request.getSessionId() : null;
+        // ChatSession session = chatHistoryService.createOrGetSession(
+        //         Optional.ofNullable(requestedSessionId),
+        //         request.getQuestion(),
+        //         resolveUserId(request));
+        // chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
 
         // 查询预处理
         // 清洗，去除首尾空格、转换为小写、移除不符合正则（字母/数字/汉字/标点）的噪音字符。
@@ -100,9 +100,9 @@ public class RagController {
 
         Double topScore = extractTopScore(documents);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);
-        chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
-                serialiseRetrievalContext(response.getReferences()));
-        response.setSessionId(session.id());
+        // chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
+        //         serialiseRetrievalContext(response.getReferences()));
+        // response.setSessionId(session.id());
         return ResponseEntity.ok(response);
     }
 

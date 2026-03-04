@@ -11,9 +11,8 @@ spring:
       pgvector:
         # 是否自动初始化向量表
         initialize-schema: false
-        # 向量维度：需与所用 Embedding 模型输出一致
-        # Qwen3-Embedding-8B 输出维度为 4096
-        dimensions: 4096
+        # 向量维度
+        dimensions: 1024
         # 距离计算方式：COSINE（余弦相似度推荐）/ EUCLIDEAN / INNER_PRODUCT
         distance-type: COSINE_DISTANCE
   # 项目同时引入了 OpenAI / Dashscope / Ollama 三个 starter，导致有 3 个 EmbeddingModel Bean。

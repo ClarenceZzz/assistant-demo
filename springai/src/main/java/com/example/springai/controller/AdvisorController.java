@@ -32,44 +32,24 @@ public class AdvisorController {
 
     private final ChatClient chatClient;
 
-    /**
-     * 构造注入：
-     * <ul>
-     *   <li>{@code vectorStore} — 由 {@code spring-ai-starter-vector-store-pgvector} 自动配置的 PgVectorStore Bean</li>
-     *   <li>{@code chatModel} — OpenAI 模型 Bean</li>
-     * </ul>
-     *
-     * <p>Advisor 执行顺序（order 越小越靠外层）：
-     * <pre>
-     *   VectorStoreChatMemoryAdvisor(order=0) ──► SimpleLoggerAdvisor(order=1) ──► 模型
-     * </pre>
-     */
     public AdvisorController(OpenAiChatModel chatModel, VectorStore vectorStore) {
         this.chatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(
                         VectorStoreChatMemoryAdvisor.builder(vectorStore)
-                                .defaultTopK(5)   // 每次从向量库语义检索最相关的 5 条历史
+                                .defaultTopK(1)   // 每次从向量库语义检索最相关的 5 条历史
                                 .order(0)         // 最外层执行：请求阶段最先处理，响应阶段最后写入
                                 .build(),
-                        new SimpleLoggerAdvisor() // 调试日志，DEBUG 级别可见完整请求/响应
+                        new SimpleLoggerAdvisor() 
                 )
                 .build();
     }
 
     /**
-     * 基于向量数据库长期记忆的对话接口（同步）。
+     * 基于向量数据库长期记忆的对话接口
      *
-     * <p>工作流程：
-     * <ol>
-     *   <li>{@code before()}: 将当前问题向量化，从 pgvector 语义搜索最相关的历史片段，
-     *       追加到 System Prompt 的 {@code long_term_memory} 区域</li>
-     *   <li>调用模型</li>
-     *   <li>{@code after()}: 将本轮"用户消息 + 模型回复"向量化并写入 pgvector，供后续检索</li>
-     * </ol>
-     *
-     * @param message        用户输入的消息
-     * @param conversationId 会话 ID，用于隔离不同用户/会话的记忆（建议前端生成唯一 UUID）
-     * @return 模型回复文本
+     * 当前问题向量化，从 pgvector 语义搜索最相关的记录，追加到 System Prompt 的 {@code long_term_memory} 
+     * 调用模型
+     * 将本轮"用户消息 + 模型回复"向量化并写入 pgvector，供后续检索
      */
     @GetMapping("/vector-memory")
     public String vectorMemoryChat(
@@ -79,22 +59,13 @@ public class AdvisorController {
         response.setCharacterEncoding("UTF-8");
         return chatClient
                 .prompt()
-                .system("你是一个有长期记忆的智能助手，能够记住用户历史问过的内容并加以利用。")
+                .system("you are a helpful assistant")
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
                 .content();
     }
 
-    /**
-     * 基于向量数据库长期记忆的对话接口（流式）。
-     *
-     * <p>与 {@link #vectorMemoryChat} 逻辑相同，但以 Server-Sent Events 流式返回内容，
-     * 适合前端实时展示打字机效果。
-     *
-     * @param message        用户输入的消息
-     * @param conversationId 会话 ID
-     */
     @GetMapping("/vector-memory/stream")
     public Flux<String> vectorMemoryChatStream(
             @RequestParam String message,
@@ -104,7 +75,7 @@ public class AdvisorController {
         response.setCharacterEncoding("UTF-8");
         return chatClient
                 .prompt()
-                .system("你是一个有长期记忆的智能助手，能够记住用户历史问过的内容并加以利用。")
+                .system("you are a helpful assistant")
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .stream()
