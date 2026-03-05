@@ -11,6 +11,8 @@
  - T1-2-implement-embedding-client
  - T3-2-implement-llm-generation-with-fallback
  - T5-2-implement-chat-history-service
+ - T1-6-fix-startup-configuration
+ - T1-7-fix-sse-mcp-connection
 
 ## In Review
 - T2-1-implement-vector-retrieval
@@ -23,6 +25,7 @@
 - T5-3-implement-chat-history-controller
 - T5-4-integrate-chat-history-with-rag-api
 - T6-1-update-readme-documentation
+- T7-1-advisor-hitl
 
 ## Testing / QA
 - _None_
@@ -34,3 +37,4 @@
  - T1-5-upgrade-dependencies
 - T1-1-setup-spring-ai-project
 - T5-1-implement-chat-history-persistence
+- T7-2-streaming-hitl
