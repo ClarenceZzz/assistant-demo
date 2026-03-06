@@ -11,6 +11,9 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import java.util.List;
 
+import com.example.springaialibaba.config.properties.SiliconFlowEmbeddingProperties;
+import com.example.springaialibaba.core.client.SiliconFlowEmbeddingClient;
+import com.example.springaialibaba.exception.SiliconFlowApiException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +30,7 @@ import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.embedding.EmbeddingResponseMetadata;
 
 /**
- * {@link SiliconFlowEmbeddingClient} 的单元测试。
+ * {@link SiliconFlowEmbeddingClient} 的单元测试�?
  */
 class SiliconFlowEmbeddingClientTest {
 

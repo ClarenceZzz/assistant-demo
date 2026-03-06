@@ -1,9 +1,9 @@
 package com.example.springaialibaba.controller;
 
-import com.example.springaialibaba.chat.history.ChatHistoryService;
-import com.example.springaialibaba.chat.history.ChatMessage;
-import com.example.springaialibaba.chat.history.ChatSession;
-import com.example.springaialibaba.controller.dto.UpdateChatSessionRequest;
+import com.example.springaialibaba.service.ChatHistoryService;
+import com.example.springaialibaba.model.entity.ChatMessage;
+import com.example.springaialibaba.model.entity.ChatSession;
+import com.example.springaialibaba.model.dto.UpdateChatSessionRequest;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

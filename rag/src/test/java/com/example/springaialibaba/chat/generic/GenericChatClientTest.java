@@ -22,13 +22,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.springaialibaba.config.properties.GenericChatProperties;
+import com.example.springaialibaba.core.client.GenericChatClient;
+import com.example.springaialibaba.exception.GenericChatApiException;
+
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 
 /**
- * {@link GenericChatClient} 的单元测试。
+ * {@link GenericChatClient} 的单元测试�?
  */
 class GenericChatClientTest {
 
@@ -103,7 +107,7 @@ class GenericChatClientTest {
 
         Prompt prompt = new Prompt(List.of(
             new SystemMessage("你是一个乐于助人的助手"),
-            new UserMessage("请用中文打招呼")
+            new UserMessage("请用中文打招")
         ));
 
         ChatResponse chatResponse = chatClient.call(prompt);
@@ -120,7 +124,7 @@ class GenericChatClientTest {
             + "\"model\":\"test-model\","
             + "\"choices\":[{"
             + "\"index\":0,"
-            + "\"message\":{\"role\":\"assistant\",\"content\":\"答案是42\"},"
+            + "\"message\":{\"role\":\"assistant\",\"content\":\"答案�?2\"},"
             + "\"finish_reason\":\"stop\""
             + "}]}";
 
@@ -132,7 +136,7 @@ class GenericChatClientTest {
 
         ChatResponse response = chatClient.call(new Prompt("生命、宇宙以及一切的答案是？"));
 
-        assertThat(response.getResult().getOutput().getText()).isEqualTo("答案是42");
+        assertThat(response.getResult().getOutput().getText()).isEqualTo("答案�?2");
     }
 
     @Test

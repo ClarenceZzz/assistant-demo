@@ -1,5 +1,7 @@
 package com.example.springaialibaba.service;
 
+import com.example.springaialibaba.exception.ToolApprovalRequiredException;
+import com.example.springaialibaba.model.entity.PendingApproval;
 import java.util.ArrayList;
 import java.util.List;
 

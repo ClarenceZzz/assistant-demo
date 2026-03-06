@@ -11,6 +11,9 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import java.util.List;
 
+import com.example.springaialibaba.config.properties.SiliconFlowRerankProperties;
+import com.example.springaialibaba.core.client.RerankClient;
+import com.example.springaialibaba.exception.SiliconFlowRerankException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,10 +25,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.springaialibaba.rerank.RerankedDocument;
+import com.example.springaialibaba.model.entity.RerankedDocument;
 
 /**
- * {@link RerankClient} 的单元测试。
+ * {@link RerankClient} 的单元测试�?
  */
 class RerankClientTest {
 

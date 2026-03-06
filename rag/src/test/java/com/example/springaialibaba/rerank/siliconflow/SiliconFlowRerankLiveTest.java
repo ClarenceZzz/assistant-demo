@@ -4,18 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import com.example.springaialibaba.config.properties.SiliconFlowRerankProperties;
+import com.example.springaialibaba.core.client.RerankClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.springaialibaba.rerank.RerankedDocument;
+import com.example.springaialibaba.model.entity.RerankedDocument;
 
 import org.springframework.util.StringUtils;
 
 /**
- * 使用 application-test.yml 中的 SiliconFlow Rerank 配置调用真实接口。
+ * 使用 application-test.yml 中的 SiliconFlow Rerank 配置调用真实接口�?
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -32,9 +34,9 @@ class SiliconFlowRerankLiveTest {
         Assumptions.assumeTrue(StringUtils.hasText(properties.getApiKey()), "SiliconFlow rerank API key 未配置，跳过实时测试");
 
         List<String> documents = List.of(
-            "苹果是一种常见的水果，富含维生素。",
-            "香蕉是黄色的水果。",
-            "编程可以用于构建人工智能系统。"
+            "苹果是一种常见的水果，富含维生素",
+            "香蕉是黄色的水果",
+            "编程可以用于构建人工智能系统"
         );
 
         List<RerankedDocument> results = rerankClient.rerank("苹果 水果", documents);

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import com.example.springaialibaba.core.rag.RetrievalService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,11 +19,11 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 
-import com.example.springaialibaba.rerank.RerankedDocument;
-import com.example.springaialibaba.rerank.siliconflow.RerankClient;
+import com.example.springaialibaba.model.entity.RerankedDocument;
+import com.example.springaialibaba.core.client.RerankClient;
 
 /**
- * 覆盖检索服务调用重排序流程及降级逻辑的单元测试。
+ * 覆盖检索服务调用重排序流程及降级逻辑的单元测试�?
  */
 @ExtendWith(MockitoExtension.class)
 class RetrievalServiceTest {
@@ -43,7 +44,7 @@ class RetrievalServiceTest {
     }
 
     /**
-     * 验证重排序结果能够根据 RerankClient 的顺序调整，并正确传递原始文档内容。
+     * 验证重排序结果能够根�?RerankClient 的顺序调整，并正确传递原始文档内容�?
      */
     @Test
     void shouldReorderDocumentsBasedOnRerankResults() {
@@ -67,7 +68,7 @@ class RetrievalServiceTest {
     }
 
     /**
-     * 验证当 Rerank 失败时，检索服务会降级返回原始向量检索结果的前 topN 项。
+     * 验证�?Rerank 失败时，检索服务会降级返回原始向量检索结果的�?topN 项�?
      */
     @Test
     void shouldFallbackToVectorResultsWhenRerankFails() {

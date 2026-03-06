@@ -10,8 +10,8 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.example.springaialibaba.advisor.HumanInTheLoopAdvisor;
-import com.example.springaialibaba.service.PendingApprovalStore;
+import com.example.springaialibaba.core.advisor.HumanInTheLoopAdvisor;
+import com.example.springaialibaba.repository.PendingApprovalStore;
 
 /**
  * Advisor HITL 方案的配置类。

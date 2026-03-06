@@ -4,13 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 
+import com.example.springaialibaba.config.properties.SiliconFlowEmbeddingProperties;
+import com.example.springaialibaba.core.client.SiliconFlowEmbeddingClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * 使用 application-test.yml 中的 SiliconFlow 配置调用真实接口。
+ * 使用 application-test.yml 中的 SiliconFlow 配置调用真实接口�?
  */
 @SpringBootTest
 @ActiveProfiles("test")

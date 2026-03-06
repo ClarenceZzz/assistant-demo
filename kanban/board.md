@@ -7,12 +7,13 @@
 - _None_
 
 ## In Progress
+- T8-1-refactor-package-structure
 - T4-1-implement-query-preprocessing
- - T1-2-implement-embedding-client
- - T3-2-implement-llm-generation-with-fallback
- - T5-2-implement-chat-history-service
- - T1-6-fix-startup-configuration
- - T1-7-fix-sse-mcp-connection
+- T1-2-implement-embedding-client
+- T3-2-implement-llm-generation-with-fallback
+- T5-2-implement-chat-history-service
+- T1-6-fix-startup-configuration
+- T1-7-fix-sse-mcp-connection
 
 ## In Review
 - T2-1-implement-vector-retrieval

@@ -15,16 +15,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.example.springaialibaba.chat.history.ChatHistoryService;
-import com.example.springaialibaba.chat.history.ChatSession;
-import com.example.springaialibaba.controller.dto.RagQueryRequest;
-import com.example.springaialibaba.controller.dto.RagQueryResponse;
-import com.example.springaialibaba.controller.dto.ReferenceDto;
-import com.example.springaialibaba.formatter.ResponseFormatter;
-import com.example.springaialibaba.generation.GenerationService;
-import com.example.springaialibaba.preprocessor.QueryPreprocessor;
-import com.example.springaialibaba.retrieval.RetrievalService;
+import com.example.springaialibaba.service.ChatHistoryService;
+import com.example.springaialibaba.model.entity.ChatSession;
+import com.example.springaialibaba.model.dto.RagQueryRequest;
+import com.example.springaialibaba.model.dto.RagQueryResponse;
+import com.example.springaialibaba.model.dto.ReferenceDto;
+import com.example.springaialibaba.core.formatter.ResponseFormatter;
+import com.example.springaialibaba.core.rag.GenerationService;
+import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
+import com.example.springaialibaba.core.rag.RetrievalService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

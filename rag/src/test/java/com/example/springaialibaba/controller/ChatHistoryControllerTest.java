@@ -10,12 +10,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.springaialibaba.chat.history.ChatHistoryService;
-import com.example.springaialibaba.chat.history.ChatMessage;
-import com.example.springaialibaba.chat.history.ChatMessageRole;
-import com.example.springaialibaba.chat.history.ChatSession;
-import com.example.springaialibaba.chat.history.ChatSessionStatus;
-import com.example.springaialibaba.controller.dto.UpdateChatSessionRequest;
+import com.example.springaialibaba.service.ChatHistoryService;
+import com.example.springaialibaba.model.entity.ChatMessage;
+import com.example.springaialibaba.model.enums.ChatMessageRole;
+import com.example.springaialibaba.model.entity.ChatSession;
+import com.example.springaialibaba.model.enums.ChatSessionStatus;
+import com.example.springaialibaba.model.dto.UpdateChatSessionRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -42,7 +42,7 @@ class ChatHistoryControllerTest {
     private ChatHistoryService chatHistoryService;
 
     @Test
-    @DisplayName("返回指定用户的聊天会话列表")
+    @DisplayName("返回指定用户的聊天会话列")
     void testGetSessions_Success() throws Exception {
         ChatSession session = new ChatSession(1L, "user-1", "欢迎", "default", ChatSessionStatus.ACTIVE,
                 OffsetDateTime.now(), OffsetDateTime.now());
@@ -58,7 +58,7 @@ class ChatHistoryControllerTest {
     }
 
     @Test
-    @DisplayName("返回指定会话的消息列表")
+    @DisplayName("返回指定会话的消息列")
     void testGetMessages_Success() throws Exception {
         ChatMessage message = new ChatMessage(5L, 9L, ChatMessageRole.USER, "你好", null, OffsetDateTime.now());
         when(chatHistoryService.findMessagesBySessionId(9L)).thenReturn(List.of(message));
@@ -106,7 +106,7 @@ class ChatHistoryControllerTest {
     @DisplayName("查询不存在的会话消息返回 404")
     void testGetMessages_NotFound() throws Exception {
         when(chatHistoryService.findMessagesBySessionId(404L))
-                .thenThrow(new IllegalArgumentException("会话不存在: 404"));
+                .thenThrow(new IllegalArgumentException("会话不存�? 404"));
 
         mockMvc.perform(get(BASE_URL + "/messages/{sessionId}", 404L))
                 .andExpect(status().isNotFound());

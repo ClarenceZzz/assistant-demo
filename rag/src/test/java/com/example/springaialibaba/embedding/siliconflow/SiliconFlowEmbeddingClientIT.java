@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.time.Instant;
 import java.util.Optional;
 
+import com.example.springaialibaba.config.properties.SiliconFlowEmbeddingProperties;
+import com.example.springaialibaba.core.client.SiliconFlowEmbeddingClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * 调用真实 SiliconFlow API 的集成测试，可通过 {@code -Dsiliconflow.it.enabled=true} 启用。
+ * 调用真实 SiliconFlow API 的集成测试，可通过 {@code -Dsiliconflow.it.enabled=true} 启用�?
  */
 class SiliconFlowEmbeddingClientIT {
 

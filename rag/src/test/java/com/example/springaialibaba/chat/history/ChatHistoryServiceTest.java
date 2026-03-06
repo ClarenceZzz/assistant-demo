@@ -7,6 +7,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.springaialibaba.model.entity.ChatMessage;
+import com.example.springaialibaba.model.entity.ChatSession;
+import com.example.springaialibaba.model.enums.ChatMessageRole;
+import com.example.springaialibaba.model.enums.ChatSessionStatus;
+import com.example.springaialibaba.repository.ChatMessageRepository;
+import com.example.springaialibaba.repository.ChatSessionRepository;
+import com.example.springaialibaba.service.ChatHistoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
@@ -104,7 +111,7 @@ class ChatHistoryServiceTest {
 
         assertThatThrownBy(() -> chatHistoryService.deleteSession(SESSION_ID))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("会话不存在");
+                .hasMessageContaining("会话不存");
     }
 
     @Test
@@ -176,7 +183,7 @@ class ChatHistoryServiceTest {
 
         assertThatThrownBy(() -> chatHistoryService.findMessagesBySessionId(SESSION_ID))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("会话不存在");
+                .hasMessageContaining("会话不存");
     }
 
     @Test
@@ -186,7 +193,7 @@ class ChatHistoryServiceTest {
 
         assertThatThrownBy(() -> chatHistoryService.saveNewMessage(SESSION_ID, "user", "hi", "not-json"))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("检索上下文不是有效的 JSON");
+                .hasMessageContaining("检索上下文不是有效�?JSON");
     }
 
     @Test

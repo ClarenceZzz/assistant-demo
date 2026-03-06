@@ -1,6 +1,6 @@
 package com.example.springaialibaba;
 
-import com.example.springaialibaba.tool.WeatherTool;
+import com.example.springaialibaba.core.tool.WeatherTool;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.aop.framework.ProxyFactory;

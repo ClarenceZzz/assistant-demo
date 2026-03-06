@@ -1,5 +1,9 @@
 package com.example.springaialibaba.service;
 
+import com.example.springaialibaba.exception.ToolApprovalRequiredException;
+import com.example.springaialibaba.model.entity.PendingApproval;
+import com.example.springaialibaba.repository.PendingApprovalStore;
+
 import java.util.Set;
 import java.util.UUID;
 

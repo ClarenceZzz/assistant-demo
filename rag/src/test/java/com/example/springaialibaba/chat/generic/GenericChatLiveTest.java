@@ -2,8 +2,10 @@ package com.example.springaialibaba.chat.generic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.springaialibaba.generation.GenerationService;
-import com.example.springaialibaba.retrieval.RetrievalService;
+import com.example.springaialibaba.config.properties.GenericChatProperties;
+import com.example.springaialibaba.core.client.GenericChatClient;
+import com.example.springaialibaba.core.rag.GenerationService;
+import com.example.springaialibaba.core.rag.RetrievalService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import org.springframework.ai.document.Document;
@@ -19,7 +21,7 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 /**
- * 使用 test Profile 调用真实的通用 Chat API。
+ * 使用 test Profile 调用真实的通用 Chat API�?
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -41,7 +43,7 @@ class GenericChatLiveTest {
     void shouldCallGenericChatApiUsingTestProfileConfiguration() {
         Assumptions.assumeTrue(StringUtils.hasText(properties.getApiKey()), "Generic Chat API Key 未配置，跳过实时测试");
 
-        ChatResponse response = chatClient.call(new Prompt("请用一句话介绍你自己"));
+        ChatResponse response = chatClient.call(new Prompt("请用一句话介绍你自"));
 
         assertThat(response.getResult().getOutput().getText()).isNotBlank();
         System.out.println("Generic chat response: " + response.getResult().getOutput().getText());

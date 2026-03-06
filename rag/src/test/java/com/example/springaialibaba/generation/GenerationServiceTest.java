@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 
+import com.example.springaialibaba.core.rag.GenerationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,9 +20,9 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 
-import com.example.springaialibaba.chat.generic.GenericChatApiException;
-import com.example.springaialibaba.chat.generic.GenericChatClient;
-import com.example.springaialibaba.prompt.DynamicPromptBuilder;
+import com.example.springaialibaba.exception.GenericChatApiException;
+import com.example.springaialibaba.core.client.GenericChatClient;
+import com.example.springaialibaba.core.prompt.DynamicPromptBuilder;
 
 @ExtendWith(MockitoExtension.class)
 class GenerationServiceTest {

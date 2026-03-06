@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 
+import com.example.springaialibaba.core.rag.RetrievalService;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 /**
  * 验证 {@link RetrievalService} 能够命中 {@code application-test.yml} 中配置的
- * {@code rag_chunks} 表并读取实际分片内容。
+ * {@code rag_chunks} 表并读取实际分片内容�?
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -27,7 +28,7 @@ class RetrievalServiceRagChunksIntegrationTest {
     private JdbcTemplate jdbcTemplate;
 
     /**
-     * 验证检索服务可以直接命中 rag_chunks 表中的示例分片并返回内容片段。
+     * 验证检索服务可以直接命�?rag_chunks 表中的示例分片并返回内容片段�?
      */
     @Test
     void shouldRetrieveChunkFromRagChunksTable() {

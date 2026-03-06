@@ -6,13 +6,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.example.springaialibaba.core.formatter.DefaultResponseFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
 
-import com.example.springaialibaba.controller.dto.RagQueryResponse;
-import com.example.springaialibaba.controller.dto.ReferenceDto;
+import com.example.springaialibaba.model.dto.RagQueryResponse;
+import com.example.springaialibaba.model.dto.ReferenceDto;
 
 class ResponseFormatterTest {
 
@@ -24,7 +25,7 @@ class ResponseFormatterTest {
     }
 
     @Test
-    @DisplayName("完整格式化回答、引用和置信度")
+    @DisplayName("完整格式化回答、引用和置信")
     void testFullResponseFormatting() {
         Document first = new Document("First chunk", Map.of(
                 "title", "User Manual",
@@ -48,7 +49,7 @@ class ResponseFormatterTest {
     }
 
     @Test
-    @DisplayName("元数据字段支持多种命名方式")
+    @DisplayName("元数据字段支持多种命名方")
     void testMetadataExtractionForReferences() {
         Document document = new Document("Chunk", Map.of(
                 "document_title", "Quick Start",
@@ -63,7 +64,7 @@ class ResponseFormatterTest {
     }
 
     @Test
-    @DisplayName("置信度会对输入分数进行截断和非线性映射")
+    @DisplayName("置信度会对输入分数进行截断和非线性映")
     void testConfidenceCalculation() {
         RagQueryResponse highScore = formatter.format("answer", List.of(new Document("text")), 2.5d);
         RagQueryResponse lowScore = formatter.format("answer", List.of(new Document("text")), -0.3d);
@@ -75,7 +76,7 @@ class ResponseFormatterTest {
     }
 
     @Test
-    @DisplayName("空上下文会返回空引用列表且置信度为 0")
+    @DisplayName("空上下文会返回空引用列表且置信度�?0")
     void testFormattingForFallbackCase() {
         RagQueryResponse response = formatter.format("Fallback", Collections.emptyList(), null);
 
