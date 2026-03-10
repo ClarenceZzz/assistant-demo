@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -54,15 +55,18 @@ public class RagController {
 
     private final ObjectMapper objectMapper;
 
+    private final RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
+
     public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService,
             GenerationService generationService, ResponseFormatter responseFormatter,
-            ChatHistoryService chatHistoryService, ObjectMapper objectMapper) {
+            ChatHistoryService chatHistoryService, ObjectMapper objectMapper, RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
         this.queryPreprocessor = queryPreprocessor;
         this.retrievalService = retrievalService;
         this.generationService = generationService;
         this.responseFormatter = responseFormatter;
         this.chatHistoryService = chatHistoryService;
         this.objectMapper = objectMapper;
+        this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -103,6 +107,10 @@ public class RagController {
         //         serialiseRetrievalContext(response.getReferences()));
         // response.setSessionId(session.id());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(path = "/query-new", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void queryNew() {
     }
 
     private String normaliseOptionalInput(String value, String defaultValue) {
