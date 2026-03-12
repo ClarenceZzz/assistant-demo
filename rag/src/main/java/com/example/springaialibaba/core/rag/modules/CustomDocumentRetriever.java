@@ -47,6 +47,7 @@ public class CustomDocumentRetriever implements DocumentRetriever {
     @Override
     public List<Document> retrieve(Query query) {
         log.debug("DocumentRetriever: 检索查询={}", query.text());
+        query.context().get("");
 
         // --- 在此处实现自定义检索逻辑 ---
         // 示例：调用外部 API、ES、或自定义向量库

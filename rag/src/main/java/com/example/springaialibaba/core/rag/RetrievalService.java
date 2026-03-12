@@ -52,7 +52,6 @@ public class RetrievalService {
                 .topK(topK)
                 .build();
         // 向量检索
-        // SiliconFlowEmbeddingClient.call 调接口 embedding 查询
         // 在 VectorStore 中进行相似度搜索，获取初始候选池（Top-K）
         List<Document> documents = vectorStore.similaritySearch(searchRequest);
         return documents != null ? documents : Collections.emptyList();

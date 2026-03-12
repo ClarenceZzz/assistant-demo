@@ -7,13 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import com.example.springaialibaba.config.properties.SiliconFlowRerankProperties;
-import com.example.springaialibaba.config.properties.SiliconFlowEmbeddingProperties;
-import com.example.springaialibaba.config.properties.GenericChatProperties;
 import com.example.springaialibaba.config.properties.PromptProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({SiliconFlowEmbeddingProperties.class, SiliconFlowRerankProperties.class,
-        GenericChatProperties.class, PromptProperties.class})
+@EnableConfigurationProperties({SiliconFlowRerankProperties.class, PromptProperties.class})
 public class SpringAiAlibabaApplication {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiAlibabaApplication.class);

@@ -7,6 +7,7 @@ import org.springframework.ai.rag.preretrieval.query.transformation.QueryTransfo
 import org.springframework.ai.rag.retrieval.join.DocumentJoiner;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.rag.postretrieval.document.DocumentPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,12 +60,14 @@ public class RAGAdvisorConfig {
             DocumentRetriever documentRetriever, 
             DocumentJoiner documentJoiner,
             DocumentPostProcessor documentPostProcessor, 
-            QueryAugmenter queryAugmenter) {
+            QueryAugmenter queryAugmenter,
+            VectorStore vectorStore) {
         
         return RetrievalAugmentationAdvisor.builder()
             .queryTransformers(queryTransformer)
             .queryExpander(queryExpander)
             .documentRetriever(VectorStoreDocumentRetriever.builder()
+                .vectorStore(vectorStore)
                 .topK(5)
                 .build())
             .documentJoiner(documentJoiner)

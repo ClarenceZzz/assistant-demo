@@ -11,9 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import com.example.springaialibaba.exception.GenericChatApiException;
 import com.example.springaialibaba.model.dto.ApiErrorResponse;
-import com.example.springaialibaba.exception.SiliconFlowApiException;
 import com.example.springaialibaba.exception.SiliconFlowRerankException;
 
 /**
@@ -30,11 +28,7 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex, request);
     }
 
-    @ExceptionHandler({
-            SiliconFlowApiException.class,
-            SiliconFlowRerankException.class,
-            GenericChatApiException.class
-    })
+    @ExceptionHandler(SiliconFlowRerankException.class)
     public ResponseEntity<ApiErrorResponse> handleExternalServiceExceptions(RuntimeException ex,
             HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.BAD_GATEWAY, ex, request);

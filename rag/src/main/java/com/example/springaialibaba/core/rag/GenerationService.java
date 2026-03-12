@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.example.springaialibaba.core.client.GenericChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import com.example.springaialibaba.core.prompt.DynamicPromptBuilder;
 
 /**
@@ -28,7 +28,7 @@ public class GenerationService {
 
     private static final Logger log = LoggerFactory.getLogger(GenerationService.class);
 
-    private final GenericChatClient chatClient;
+    private final ChatModel chatModel;
 
     private final DynamicPromptBuilder promptBuilder;
 
@@ -38,11 +38,11 @@ public class GenerationService {
 
     private final int minContextThreshold;
 
-    public GenerationService(GenericChatClient chatClient, DynamicPromptBuilder promptBuilder,
+    public GenerationService(ChatModel chatModel, DynamicPromptBuilder promptBuilder,
             @Value("${fallback.answer.no-context:当前知识库暂无相关内容，请稍后重试}") String noContextFallback,
             @Value("${fallback.answer.error:AI 服务暂时不可用，请稍后再试}") String errorFallback,
             @Value("${retrieval.context.min-threshold:1}") int minContextThreshold) {
-        this.chatClient = chatClient;
+        this.chatModel = chatModel;
         this.promptBuilder = promptBuilder;
         this.noContextFallback = StringUtils.hasText(noContextFallback) ? noContextFallback : "";
         this.errorFallback = StringUtils.hasText(errorFallback) ? errorFallback : this.noContextFallback;
@@ -66,7 +66,7 @@ public class GenerationService {
 
         Prompt prompt = promptBuilder.build(question, safeContext, persona, channel);
         try {
-            ChatResponse response = chatClient.call(prompt);
+            ChatResponse response = chatModel.call(prompt);
             return extractAnswer(response);
         }
         catch (RuntimeException ex) {
