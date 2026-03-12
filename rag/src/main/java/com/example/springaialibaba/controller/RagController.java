@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,32 +36,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping(path = "/api/v1/rag", produces = MediaType.APPLICATION_JSON_VALUE)
 public class RagController {
-
     private static final Logger log = LoggerFactory.getLogger(RagController.class);
-
     private static final String DEFAULT_PERSONA = "客服人员";
-
     private static final String DEFAULT_CHANNEL = "售后服务";
-
     private static final String DEFAULT_USER_ID = "anonymous-user";
 
     private final QueryPreprocessor queryPreprocessor;
-
     private final RetrievalService retrievalService;
-
     private final GenerationService generationService;
-
     private final ResponseFormatter responseFormatter;
-
     private final ChatHistoryService chatHistoryService;
-
     private final ObjectMapper objectMapper;
-
     private final RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
+    private ChatClient chatClient;
+    private OpenAiChatModel chatModel;
 
-    public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService,
-            GenerationService generationService, ResponseFormatter responseFormatter,
-            ChatHistoryService chatHistoryService, ObjectMapper objectMapper, RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
+    public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService, GenerationService generationService, 
+            ResponseFormatter responseFormatter, ChatHistoryService chatHistoryService, ObjectMapper objectMapper, 
+            RetrievalAugmentationAdvisor retrievalAugmentationAdvisor, OpenAiChatModel chatModel) {
         this.queryPreprocessor = queryPreprocessor;
         this.retrievalService = retrievalService;
         this.generationService = generationService;
@@ -67,6 +61,10 @@ public class RagController {
         this.chatHistoryService = chatHistoryService;
         this.objectMapper = objectMapper;
         this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
+        this.chatModel = chatModel;
+        this.chatClient = ChatClient.builder(chatModel)
+            .defaultAdvisors(retrievalAugmentationAdvisor)
+            .build();
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -111,6 +109,8 @@ public class RagController {
 
     @PostMapping(path = "/query-new", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void queryNew() {
+        String deviceType = "";
+        String userId = "";
     }
 
     private String normaliseOptionalInput(String value, String defaultValue) {
