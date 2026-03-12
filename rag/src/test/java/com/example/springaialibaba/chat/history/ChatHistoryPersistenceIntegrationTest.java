@@ -2,6 +2,12 @@ package com.example.springaialibaba.chat.history;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.springaialibaba.model.entity.ChatMessage;
+import com.example.springaialibaba.model.entity.ChatSession;
+import com.example.springaialibaba.model.enums.ChatMessageRole;
+import com.example.springaialibaba.model.enums.ChatSessionStatus;
+import com.example.springaialibaba.repository.ChatMessageRepository;
+import com.example.springaialibaba.repository.ChatSessionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
@@ -68,7 +74,7 @@ class ChatHistoryPersistenceIntegrationTest {
         ChatSession savedSession = chatSessionRepository.save(new ChatSession(
                 null,
                 "user-456",
-                "另一个会话",
+                "另一个会",
                 "SUPPORT",
                 ChatSessionStatus.ACTIVE,
                 null,
@@ -79,7 +85,7 @@ class ChatHistoryPersistenceIntegrationTest {
                         [
                           {
                             "title": "产品说明书_OG-5308_20251020",
-                            "section": "8)按摩手法(手动按摩功能控制键)",
+                            "section": "8)按摩手法(手动按摩功能控制�?",
                             "documentId": "产品说明书_OG-5308_20251020",
                             "chunkId": "产品说明书_OG-5308_20251020-27"
                           }
@@ -90,7 +96,7 @@ class ChatHistoryPersistenceIntegrationTest {
                 null,
                 savedSession.id(),
                 ChatMessageRole.USER,
-                "您好，我想了解按摩椅的功能",
+                "您好，我想了解按摩椅的功",
                 retrievalContext,
                 null);
 
@@ -102,7 +108,7 @@ class ChatHistoryPersistenceIntegrationTest {
         assertThat(reloadedMessage).isPresent();
         assertThat(reloadedMessage.get().sessionId()).isEqualTo(savedSession.id());
         assertThat(reloadedMessage.get().role()).isEqualTo(ChatMessageRole.USER);
-        assertThat(reloadedMessage.get().content()).isEqualTo("您好，我想了解按摩椅的功能");
+        assertThat(reloadedMessage.get().content()).isEqualTo("您好，我想了解按摩椅的功");
         assertThat(reloadedMessage.get().retrievalContext()).isEqualTo(retrievalContext);
         assertThat(reloadedMessage.get().createdAt()).isNotNull();
     }

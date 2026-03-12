@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import com.example.springaialibaba.core.rag.RetrievalService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * 使用测试 Profile 下的真实 PgVector 数据库验证 {@link RetrievalService} 的检索能力。
+ * 使用测试 Profile 下的真实 PgVector 数据库验�?{@link RetrievalService} 的检索能力�?
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -55,7 +56,7 @@ class RetrievalServiceIntegrationTest {
             // Ensure the PgVector test database is reachable before running assertions.
         }
         catch (Exception ex) {
-            Assertions.fail("无法连接到测试数据库，请确认 application-test.yml 配置与 PostgreSQL 状态。错误信息: "
+            Assertions.fail("无法连接到测试数据库，请确认 application-test.yml 配置�?PostgreSQL 状态。错误信�? "
                     + ex.getMessage(), ex);
         }
     }
@@ -71,7 +72,7 @@ class RetrievalServiceIntegrationTest {
     }
 
     /**
-     * 验证检索服务能够向真实 PgVector 写入文档并检索到匹配内容。
+     * 验证检索服务能够向真实 PgVector 写入文档并检索到匹配内容�?
      */
     @Test
     void shouldRetrieveDocumentsFromRealPgVectorDatabase() {
@@ -92,7 +93,7 @@ class RetrievalServiceIntegrationTest {
     }
 
     /**
-     * 验证测试环境使用的数据库连接信息与配置文件保持一致。
+     * 验证测试环境使用的数据库连接信息与配置文件保持一致�?
      */
     @Test
     void shouldUseApplicationTestDatasourceConfiguration() throws Exception {

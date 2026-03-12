@@ -20,7 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * 验证 PgVector 向量存储 Bean 在测试环境下可用并支持增删查操作。
+ * 验证 PgVector 向量存储 Bean 在测试环境下可用并支持增删查操作�?
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -39,13 +39,13 @@ class PgVectorStoreIntegrationTest {
             // 执行一次简单校验，确保连接可用
         }
         catch (Exception ex) {
-            Assertions.fail("无法连接到测试数据库，请确认 application-test.yml 配置与 PostgreSQL 状态。错误信息: "
+            Assertions.fail("无法连接到测试数据库，请确认 application-test.yml 配置�?PostgreSQL 状态。错误信�? "
                     + ex.getMessage(), ex);
         }
     }
 
     /**
-     * 验证 PgVectorStore Bean 已被正确注册到 Spring 上下文中。
+     * 验证 PgVectorStore Bean 已被正确注册�?Spring 上下文中�?
      */
     @Test
     void shouldExposeVectorStoreBeanInContext() {
@@ -53,15 +53,15 @@ class PgVectorStoreIntegrationTest {
     }
 
     /**
-     * 验证 PgVectorStore 能够写入文档并成功执行相似度检索。
+     * 验证 PgVectorStore 能够写入文档并成功执行相似度检索�?
      */
     @Test
     void shouldAddAndQueryDocumentsFromPgVector() {
-        Document document = new Document("Spring AI 向量检索示例", Map.of("source", "test"));
+        Document document = new Document("Spring AI 向量检索示", Map.of("source", "test"));
         vectorStore.add(List.of(document));
 
         SearchRequest request = SearchRequest.builder()
-            .query("向量检索")
+            .query("向量检")
             .similarityThreshold(SearchRequest.SIMILARITY_THRESHOLD_ACCEPT_ALL)
             .topK(1)
             .build();

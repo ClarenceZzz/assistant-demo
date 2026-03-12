@@ -2,6 +2,7 @@ package com.example.springaialibaba.preprocessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +33,7 @@ class QueryPreprocessorTest {
     void shouldHandleCombinationOfRules() {
         String processed = queryPreprocessor.process("  请问什么是 Model-Y？@#$ ");
 
-        assertThat(processed).isEqualTo("请问什么是 model-y？");
+        assertThat(processed).isEqualTo("请问什么是 model-y");
     }
 
     @Test

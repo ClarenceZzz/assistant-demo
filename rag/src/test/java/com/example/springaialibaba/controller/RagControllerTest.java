@@ -30,16 +30,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.springaialibaba.chat.history.ChatHistoryService;
-import com.example.springaialibaba.chat.history.ChatSession;
-import com.example.springaialibaba.chat.history.ChatSessionStatus;
-import com.example.springaialibaba.controller.dto.RagQueryRequest;
-import com.example.springaialibaba.controller.dto.RagQueryResponse;
-import com.example.springaialibaba.controller.dto.ReferenceDto;
-import com.example.springaialibaba.formatter.ResponseFormatter;
-import com.example.springaialibaba.generation.GenerationService;
-import com.example.springaialibaba.preprocessor.QueryPreprocessor;
-import com.example.springaialibaba.retrieval.RetrievalService;
+import com.example.springaialibaba.service.ChatHistoryService;
+import com.example.springaialibaba.model.entity.ChatSession;
+import com.example.springaialibaba.model.enums.ChatSessionStatus;
+import com.example.springaialibaba.model.dto.RagQueryRequest;
+import com.example.springaialibaba.model.dto.RagQueryResponse;
+import com.example.springaialibaba.model.dto.ReferenceDto;
+import com.example.springaialibaba.core.formatter.ResponseFormatter;
+import com.example.springaialibaba.core.rag.GenerationService;
+import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
+import com.example.springaialibaba.core.rag.RetrievalService;
 
 @WebMvcTest(controllers = RagController.class)
 class RagControllerTest {
@@ -66,7 +66,7 @@ class RagControllerTest {
     private ChatHistoryService chatHistoryService;
 
     @Test
-    @DisplayName("成功编排完整的 RAG 流程")
+    @DisplayName("成功编排完整�?RAG 流程")
     void testSuccessfulRagFlow() throws Exception {
         RagQueryRequest request = new RagQueryRequest("How to charge the EV?", "expert", "web");
         request.setUserId("test-user");
@@ -112,7 +112,7 @@ class RagControllerTest {
     }
 
     @Test
-    @DisplayName("原始查询会传递到 QueryPreprocessor 并用于检索")
+    @DisplayName("原始查询会传递到 QueryPreprocessor 并用于检")
     void testQueryPreprocessingIsCalled() throws Exception {
         RagQueryRequest request = new RagQueryRequest("  raw query  ", null, null);
         request.setUserId("csr-1");
@@ -197,7 +197,7 @@ class RagControllerTest {
     }
 
     @Test
-    @DisplayName("缺少问题时返回 400")
+    @DisplayName("缺少问题时返�?400")
     void testBlankQuestionIsRejected() throws Exception {
         RagQueryRequest request = new RagQueryRequest("   ", null, null);
         request.setUserId("user-123");

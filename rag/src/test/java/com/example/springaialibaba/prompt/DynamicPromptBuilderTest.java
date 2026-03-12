@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import com.example.springaialibaba.config.properties.PromptProperties;
+import com.example.springaialibaba.core.prompt.DynamicPromptBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -76,10 +78,10 @@ class DynamicPromptBuilderTest {
         resourceProperties.getDefaults().setChannel("默认渠道");
         DynamicPromptBuilder resourceBuilder = new DynamicPromptBuilder(resourceProperties, resourceLoader);
 
-        Prompt prompt = resourceBuilder.build("问题?", List.of(new Document("上下文")), null, null);
+        Prompt prompt = resourceBuilder.build("问题?", List.of(new Document("上下")), null, null);
 
-        assertThat(prompt.getContents()).contains("你现在扮演");
-        assertThat(prompt.getContents()).contains("上下文");
+        assertThat(prompt.getContents()).contains("你现在扮");
+        assertThat(prompt.getContents()).contains("上下");
         assertThat(prompt.getContents()).contains("默认角色");
     }
 }
