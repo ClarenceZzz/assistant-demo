@@ -1,9 +1,13 @@
 package com.example.springaialibaba.core.rag.modules;
 
+import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.preretrieval.query.transformation.QueryTransformer;
+import org.springframework.util.StringUtils;
 
 /**
  * <h2>自定义查询转换器（预检索 - 第 1 步）</h2>
@@ -41,14 +45,30 @@ public class CustomQueryTransformer implements QueryTransformer {
 
     private static final Logger log = LoggerFactory.getLogger(CustomQueryTransformer.class);
 
+    private final QueryPreprocessor queryPreprocessor;
+
+    public CustomQueryTransformer(QueryPreprocessor queryPreprocessor) {
+        this.queryPreprocessor = queryPreprocessor;
+    }
+
     @Override
     public Query transform(Query query) {
         String original = query.text();
-        // --- 在此处添加自定义转换逻辑 ---
-        // 示例：去除首尾空白，并将连续空格压缩为单个空格
-        String cleaned = original.trim().replaceAll("\\s+", " ");
+        String cleaned = queryPreprocessor.process(original);
+        if (!StringUtils.hasText(cleaned) && original != null) {
+            cleaned = original.trim();
+        }
+
+        Map<String, Object> context = new LinkedHashMap<>();
+        if (query.context() != null) {
+            context.putAll(query.context());
+        }
+        context.putIfAbsent("originalQuestion", original);
+
         log.debug("QueryTransformer: [{}] → [{}]", original, cleaned);
-        // 使用 Query.mutate() 创建一个保留原有上下文的新 Query 对象
-        return query.mutate().text(cleaned).build();
+        return query.mutate()
+                .text(cleaned)
+                .context(context)
+                .build();
     }
 }

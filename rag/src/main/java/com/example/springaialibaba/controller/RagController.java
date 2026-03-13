@@ -51,9 +51,9 @@ public class RagController {
     private ChatClient chatClient;
     private OpenAiChatModel chatModel;
 
-    public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService, GenerationService generationService, 
-            ResponseFormatter responseFormatter, ChatHistoryService chatHistoryService, ObjectMapper objectMapper, 
-            RetrievalAugmentationAdvisor retrievalAugmentationAdvisor, OpenAiChatModel chatModel) {
+    public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService, GenerationService generationService,
+                         ResponseFormatter responseFormatter, ChatHistoryService chatHistoryService, ObjectMapper objectMapper,
+                         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor, OpenAiChatModel chatModel) {
         this.queryPreprocessor = queryPreprocessor;
         this.retrievalService = retrievalService;
         this.generationService = generationService;
@@ -63,8 +63,8 @@ public class RagController {
         this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
         this.chatModel = chatModel;
         this.chatClient = ChatClient.builder(chatModel)
-            .defaultAdvisors(retrievalAugmentationAdvisor)
-            .build();
+                .defaultAdvisors(retrievalAugmentationAdvisor)
+                .build();
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE)

@@ -49,6 +49,7 @@ app:
   retrieval:
     initial-top-k: ${APP_RETRIEVAL_INITIAL_TOP_K:20}
     final-top-n: ${APP_RETRIEVAL_FINAL_TOP_N:5}
+    similarity-threshold: ${APP_RETRIEVAL_SIMILARITY_THRESHOLD:0.0}
 
 prompt:
   template: classpath:prompts/dynamic_prompt_template.txt

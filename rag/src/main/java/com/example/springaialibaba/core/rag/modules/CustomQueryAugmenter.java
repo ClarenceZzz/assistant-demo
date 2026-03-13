@@ -1,13 +1,12 @@
 package com.example.springaialibaba.core.rag.modules;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
+import org.springframework.util.StringUtils;
 
 /**
  * <h2>自定义查询增强器（生成前 - 第 6 步 / 最后一步）</h2>
@@ -48,24 +47,29 @@ import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
 public class CustomQueryAugmenter implements QueryAugmenter {
 
     private static final Logger log = LoggerFactory.getLogger(CustomQueryAugmenter.class);
+    private static final String DEFAULT_PERSONA = "客服人员";
+    private static final String DEFAULT_CHANNEL = "售后服务";
 
     @Override
     public Query augment(Query query, List<Document> documents) {
         log.debug("QueryAugmenter: 基于 {} 篇文档增强查询", documents.size());
+        String originalQuestion = resolveContextValue(query, "originalQuestion", query.text());
+        String persona = resolveContextValue(query, "persona", DEFAULT_PERSONA);
+        String channel = resolveContextValue(query, "channel", DEFAULT_CHANNEL);
 
-        // --- 在此处实现自定义 Prompt 拼装逻辑 ---
-
-        // 当没有检索到任何上下文时的兜底处理
         if (documents.isEmpty()) {
-            String fallback = "当前知识库中没有与问题直接相关的内容，请根据通用知识回答：\n\n" + query.text();
+            String fallback = """
+                    你是一名%s，服务渠道是%s。
+                    当前知识库中没有与问题直接相关的内容，请明确告知信息不足，并给出下一步建议。
+
+                    用户问题：%s
+                    """.formatted(persona, channel, originalQuestion);
             return query.mutate().text(fallback).build();
         }
 
-        // 将文档内容格式化为带编号的引用块
         String context = buildContext(documents);
-
-        // 拼装最终发送给 LLM 的 User Prompt
         String augmentedText = """
+                你是一名%s，服务渠道是%s。
                 请严格基于以下参考资料回答用户问题，不要编造资料中未提及的内容。
                 如果参考资料中没有足够信息，请如实告知。
 
@@ -73,7 +77,7 @@ public class CustomQueryAugmenter implements QueryAugmenter {
                 %s
 
                 用户问题：%s
-                """.formatted(context, query.text());
+                """.formatted(persona, channel, context, originalQuestion);
 
         return query.mutate().text(augmentedText).build();
     }
@@ -86,5 +90,16 @@ public class CustomQueryAugmenter implements QueryAugmenter {
             sb.append("\n\n");
         }
         return sb.toString().trim();
+    }
+
+    private String resolveContextValue(Query query, String key, String defaultValue) {
+        if (query.context() == null || query.context().isEmpty()) {
+            return defaultValue;
+        }
+        Object raw = query.context().get(key);
+        if (raw instanceof String stringValue && StringUtils.hasText(stringValue)) {
+            return stringValue;
+        }
+        return defaultValue;
     }
 }

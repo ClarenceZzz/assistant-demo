@@ -1,12 +1,15 @@
 package com.example.springaialibaba.core.rag.modules;
 
 import java.util.List;
-
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.util.StringUtils;
 
 /**
  * <h2>自定义文档检索器（检索 - 第 3 步）</h2>
@@ -41,17 +44,64 @@ public class CustomDocumentRetriever implements DocumentRetriever {
 
     private static final Logger log = LoggerFactory.getLogger(CustomDocumentRetriever.class);
 
-    // 实际使用时，在这里注入你的数据源（VectorStore、ES Client、JDBC 等）
-    // private final YourDataSource dataSource;
+    private final VectorStore vectorStore;
+
+    private final int defaultTopK;
+
+    private final double defaultSimilarityThreshold;
+
+    public CustomDocumentRetriever(VectorStore vectorStore, int defaultTopK, double defaultSimilarityThreshold) {
+        this.vectorStore = vectorStore;
+        this.defaultTopK = Math.max(defaultTopK, 1);
+        this.defaultSimilarityThreshold = defaultSimilarityThreshold;
+    }
 
     @Override
     public List<Document> retrieve(Query query) {
         log.debug("DocumentRetriever: 检索查询={}", query.text());
-        query.context().get("");
+        if (!StringUtils.hasText(query.text())) {
+            return List.of();
+        }
 
-        // --- 在此处实现自定义检索逻辑 ---
-        // 示例：调用外部 API、ES、或自定义向量库
-        // 这里仅返回空列表作为骨架
-        return List.of();
+        Map<String, Object> context = query.context() != null ? query.context() : Map.of();
+        int topK = resolveTopK(context.get("topK"));
+        double threshold = resolveSimilarityThreshold(context);
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(query.text())
+                .topK(topK)
+                .similarityThreshold(threshold)
+                .build();
+
+        List<Document> results = vectorStore.similaritySearch(searchRequest);
+        return results != null ? results : List.of();
+    }
+
+    private int resolveTopK(Object topKValue) {
+        if (topKValue instanceof Number topKNumber) {
+            return Math.max(topKNumber.intValue(), 1);
+        }
+        return defaultTopK;
+    }
+
+    private double resolveSimilarityThreshold(Map<String, Object> context) {
+        if (context == null || context.isEmpty()) {
+            return defaultSimilarityThreshold;
+        }
+        Object thresholdValue = context.get("similarityThreshold");
+        if (thresholdValue == null) {
+            thresholdValue = context.get("score");
+        }
+        if (thresholdValue instanceof Number scoreNumber) {
+            return scoreNumber.doubleValue();
+        }
+        if (thresholdValue instanceof String scoreString) {
+            try {
+                return Double.parseDouble(scoreString);
+            }
+            catch (NumberFormatException ignored) {
+                log.debug("无法解析相似度阈值：{}", scoreString);
+            }
+        }
+        return defaultSimilarityThreshold;
     }
 }

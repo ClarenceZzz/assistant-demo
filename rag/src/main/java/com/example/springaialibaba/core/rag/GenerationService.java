@@ -22,8 +22,12 @@ import com.example.springaialibaba.core.prompt.DynamicPromptBuilder;
  * Service responsible for orchestrating prompt construction and LLM invocation.
  * Applies fallback logic when the retrieval context is insufficient or the LLM
  * call fails.
+ *
+ * @deprecated Phase 1 迁移后，/query 已切换到 Advisor 管道，请优先使用
+ * {@code RetrievalAugmentationAdvisor} 链路。
  */
 @Service
+@Deprecated
 public class GenerationService {
 
     private static final Logger log = LoggerFactory.getLogger(GenerationService.class);

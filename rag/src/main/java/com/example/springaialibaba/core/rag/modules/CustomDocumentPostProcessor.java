@@ -1,8 +1,12 @@
 package com.example.springaialibaba.core.rag.modules;
 
-import java.util.Comparator;
+import com.example.springaialibaba.core.client.RerankClient;
+import com.example.springaialibaba.model.entity.RerankedDocument;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,30 +49,91 @@ public class CustomDocumentPostProcessor implements DocumentPostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(CustomDocumentPostProcessor.class);
 
-    /** 最多保留多少篇文档送给大模型 */
-    private static final int TOP_K = 5;
+    private final RerankClient rerankClient;
+
+    private final int topN;
+
+    public CustomDocumentPostProcessor(RerankClient rerankClient, int topN) {
+        this.rerankClient = rerankClient;
+        this.topN = Math.max(topN, 0);
+    }
 
     @Override
     public List<Document> process(Query query, List<Document> documents) {
-        log.debug("DocumentPostProcessor: 收到 {} 篇文档，执行 Top-{} 截断", documents.size(), TOP_K);
+        if (documents == null || documents.isEmpty()) {
+            return List.of();
+        }
+        int targetSize = Math.min(topN, documents.size());
+        if (targetSize <= 0) {
+            return List.of();
+        }
 
-        // --- 在此处添加自定义后处理逻辑 ---
-        // 示例 1：按 metadata 中的 "distance" 字段升序（距离越小越相关），取 Top-K
-        List<Document> result = documents.stream()
-                .sorted(Comparator.comparingDouble(doc -> {
-                    Object distance = doc.getMetadata().get("distance");
-                    if (distance instanceof Number) {
-                        return ((Number) distance).doubleValue();
+        List<String> contents = documents.stream()
+                .map(this::resolveDocumentContent)
+                .toList();
+        try {
+            List<RerankedDocument> reranked = rerankClient.rerank(query.text(), contents);
+            if (reranked.isEmpty()) {
+                return limitDocuments(documents, targetSize);
+            }
+
+            List<Document> result = new ArrayList<>();
+            for (RerankedDocument rerankedDocument : reranked) {
+                int originalIndex = rerankedDocument.getOriginalIndex();
+                if (originalIndex < 0 || originalIndex >= documents.size()) {
+                    log.warn("忽略无效的 Rerank 索引：{}", originalIndex);
+                    continue;
+                }
+                Document reordered = withRerankScore(documents.get(originalIndex), rerankedDocument.getRelevanceScore());
+                result.add(reordered);
+                if (result.size() == targetSize) {
+                    break;
+                }
+            }
+            if (result.isEmpty()) {
+                return limitDocuments(documents, targetSize);
+            }
+            if (result.size() < targetSize) {
+                for (Document document : documents) {
+                    if (result.stream().anyMatch(existing -> Objects.equals(existing.getId(), document.getId()))) {
+                        continue;
                     }
-                    return Double.MAX_VALUE; // 无分数的排到最后
-                }))
-                .limit(TOP_K)
-                .collect(Collectors.toList());
+                    result.add(document);
+                    if (result.size() == targetSize) {
+                        break;
+                    }
+                }
+            }
 
-        // 示例 2（重排序占位）：可在这里调用 Reranker API，更新 metadata 后返回新列表
-        // result = rerankWithExternalApi(query.text(), result);
+            log.debug("DocumentPostProcessor: Rerank 后保留 {} 篇文档", result.size());
+            return result;
+        }
+        catch (RuntimeException ex) {
+            log.warn("DocumentPostProcessor: Rerank 失败，降级使用原始检索顺序", ex);
+            return limitDocuments(documents, targetSize);
+        }
+    }
 
-        log.debug("DocumentPostProcessor: 处理后保留 {} 篇文档", result.size());
-        return result;
+    private List<Document> limitDocuments(List<Document> documents, int limit) {
+        if (documents.size() <= limit) {
+            return new ArrayList<>(documents);
+        }
+        return new ArrayList<>(documents.subList(0, limit));
+    }
+
+    private Document withRerankScore(Document document, double relevanceScore) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        if (document.getMetadata() != null) {
+            metadata.putAll(document.getMetadata());
+        }
+        metadata.put("rerank_score", relevanceScore);
+        return document.mutate()
+                .metadata(metadata)
+                .build();
+    }
+
+    private String resolveDocumentContent(Document document) {
+        String text = document.getText();
+        return text != null ? text : document.getFormattedContent();
     }
 }
