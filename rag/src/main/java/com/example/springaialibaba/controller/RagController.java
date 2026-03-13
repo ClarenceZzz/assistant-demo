@@ -1,16 +1,15 @@
 package com.example.springaialibaba.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.ChatClientResponse;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -19,10 +18,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.example.springaialibaba.service.ChatHistoryService;
+import com.example.springaialibaba.model.entity.ChatSession;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
+import com.example.springaialibaba.model.dto.ReferenceDto;
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
+import com.example.springaialibaba.core.rag.GenerationService;
+import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
+import com.example.springaialibaba.core.rag.RetrievalService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * REST controller orchestrating the RAG pipeline.
@@ -33,14 +39,32 @@ public class RagController {
     private static final Logger log = LoggerFactory.getLogger(RagController.class);
     private static final String DEFAULT_PERSONA = "客服人员";
     private static final String DEFAULT_CHANNEL = "售后服务";
+    private static final String DEFAULT_USER_ID = "anonymous-user";
 
-    private final ChatClient chatClient;
+    private final QueryPreprocessor queryPreprocessor;
+    private final RetrievalService retrievalService;
+    private final GenerationService generationService;
     private final ResponseFormatter responseFormatter;
+    private final ChatHistoryService chatHistoryService;
+    private final ObjectMapper objectMapper;
+    private final RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
+    private ChatClient chatClient;
+    private OpenAiChatModel chatModel;
 
-    public RagController(@Qualifier("ragChatClient") ChatClient chatClient,
-            ResponseFormatter responseFormatter) {
-        this.chatClient = chatClient;
+    public RagController(QueryPreprocessor queryPreprocessor, RetrievalService retrievalService, GenerationService generationService,
+                         ResponseFormatter responseFormatter, ChatHistoryService chatHistoryService, ObjectMapper objectMapper,
+                         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor, OpenAiChatModel chatModel) {
+        this.queryPreprocessor = queryPreprocessor;
+        this.retrievalService = retrievalService;
+        this.generationService = generationService;
         this.responseFormatter = responseFormatter;
+        this.chatHistoryService = chatHistoryService;
+        this.objectMapper = objectMapper;
+        this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
+        this.chatModel = chatModel;
+        this.chatClient = ChatClient.builder(chatModel)
+                .defaultAdvisors(retrievalAugmentationAdvisor)
+                .build();
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -50,25 +74,36 @@ public class RagController {
             throw new IllegalArgumentException("question must not be blank");
         }
 
+        // Long requestedSessionId = request != null ? request.getSessionId() : null;
+        // ChatSession session = chatHistoryService.createOrGetSession(
+        //         Optional.ofNullable(requestedSessionId),
+        //         request.getQuestion(),
+        //         resolveUserId(request));
+        // chatHistoryService.saveNewMessage(session.id(), "USER", rawQuestion, null);
+
+        // 查询预处理
+        // 清洗，去除首尾空格、转换为小写、移除不符合正则（字母/数字/汉字/标点）的噪音字符。
+        log.info("收到 RAG 查询请求，问题长度={}", rawQuestion.length());
+        String cleanedQuestion = queryPreprocessor.process(rawQuestion);
+        log.info("预处理后的查询：{}", cleanedQuestion);
+
+        // 筛选候选文档
+        List<Document> documents = retrievalService.retrieveAndRerank(cleanedQuestion);
+        log.info("检索到 {} 条候选文档", documents.size());
+
+        // 扮演的角色
         String persona = normaliseOptionalInput(request.getPersona(), DEFAULT_PERSONA);
+        // 用户提问的渠道
         String channel = normaliseOptionalInput(request.getChannel(), DEFAULT_CHANNEL);
 
-        ChatClientResponse advisorResponse = chatClient.prompt()
-                .advisors(spec -> spec
-                        .param("originalQuestion", rawQuestion)
-                        .param("persona", persona)
-                        .param("channel", channel))
-                .user(rawQuestion)
-                .call()
-                .chatClientResponse();
-
-        String answer = advisorResponse != null ? extractAnswer(advisorResponse.chatResponse()) : "";
-        List<Document> documents = extractDocuments(advisorResponse != null ? advisorResponse.context() : null);
-        log.info("Advisor 链路完成，检索文档数={}，回答长度={}", documents.size(),
-                answer != null ? answer.length() : 0);
+        String answer = generationService.generate(rawQuestion, documents, persona, channel);
+        log.info("生成的回答长度={}, 回答={}", answer != null ? answer.length() : 0, answer);
 
         Double topScore = extractTopScore(documents);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);
+        // chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
+        //         serialiseRetrievalContext(response.getReferences()));
+        // response.setSessionId(session.id());
         return ResponseEntity.ok(response);
     }
 
@@ -85,31 +120,15 @@ public class RagController {
         return value.trim();
     }
 
-    private String extractAnswer(ChatResponse chatResponse) {
-        if (chatResponse == null
-                || chatResponse.getResult() == null
-                || chatResponse.getResult().getOutput() == null
-                || !StringUtils.hasText(chatResponse.getResult().getOutput().getText())) {
-            return "";
+    private String resolveUserId(RagQueryRequest request) {
+        if (request == null) {
+            return DEFAULT_USER_ID;
         }
-        return chatResponse.getResult().getOutput().getText();
-    }
-
-    private List<Document> extractDocuments(Map<String, Object> context) {
-        if (context == null || context.isEmpty()) {
-            return List.of();
+        String userId = request.getUserId();
+        if (!StringUtils.hasText(userId)) {
+            return DEFAULT_USER_ID;
         }
-        Object rawDocuments = context.get(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT);
-        if (!(rawDocuments instanceof List<?> rawList)) {
-            return List.of();
-        }
-        List<Document> documents = new ArrayList<>(rawList.size());
-        for (Object item : rawList) {
-            if (item instanceof Document document) {
-                documents.add(document);
-            }
-        }
-        return documents;
+        return userId.trim();
     }
 
     private Double extractTopScore(List<Document> documents) {
@@ -137,5 +156,17 @@ public class RagController {
             }
         }
         return null;
+    }
+
+    private String serialiseRetrievalContext(List<ReferenceDto> references) {
+        if (references == null || references.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(references);
+        }
+        catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialise retrieval context", ex);
+        }
     }
 }
