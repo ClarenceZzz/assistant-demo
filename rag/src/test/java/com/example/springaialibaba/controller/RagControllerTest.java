@@ -3,43 +3,38 @@ package com.example.springaialibaba.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import com.example.springaialibaba.core.formatter.ResponseFormatter;
+import com.example.springaialibaba.model.dto.RagQueryRequest;
+import com.example.springaialibaba.model.dto.RagQueryResponse;
+import com.example.springaialibaba.model.dto.ReferenceDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.example.springaialibaba.service.ChatHistoryService;
-import com.example.springaialibaba.model.entity.ChatSession;
-import com.example.springaialibaba.model.enums.ChatSessionStatus;
-import com.example.springaialibaba.model.dto.RagQueryRequest;
-import com.example.springaialibaba.model.dto.RagQueryResponse;
-import com.example.springaialibaba.model.dto.ReferenceDto;
-import com.example.springaialibaba.core.formatter.ResponseFormatter;
-import com.example.springaialibaba.core.rag.GenerationService;
-import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
-import com.example.springaialibaba.core.rag.RetrievalService;
 
 @WebMvcTest(controllers = RagController.class)
 class RagControllerTest {
@@ -50,157 +45,132 @@ class RagControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private QueryPreprocessor queryPreprocessor;
-
-    @MockBean
-    private RetrievalService retrievalService;
-
-    @MockBean
-    private GenerationService generationService;
+    @MockBean(name = "ragChatClient")
+    private ChatClient ragChatClient;
 
     @MockBean
     private ResponseFormatter responseFormatter;
 
-    @MockBean
-    private ChatHistoryService chatHistoryService;
-
     @Test
-    @DisplayName("成功编排完整�?RAG 流程")
-    void testSuccessfulRagFlow() throws Exception {
+    @DisplayName("成功走 Advisor 链路并保持响应结构兼容")
+    void testSuccessfulAdvisorFlow() throws Exception {
         RagQueryRequest request = new RagQueryRequest("How to charge the EV?", "expert", "web");
-        request.setUserId("test-user");
-
         List<Document> documents = List.of(new Document("doc-content", Map.of("score", 0.85)));
-        when(queryPreprocessor.process("How to charge the EV?")).thenReturn("how to charge the ev?");
-        when(retrievalService.retrieveAndRerank("how to charge the ev?")).thenReturn(documents);
-        when(generationService.generate("How to charge the EV?", documents, "expert", "web"))
-                .thenReturn("Use the official charger.");
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.CallResponseSpec callResponseSpec = mock(ChatClient.CallResponseSpec.class);
+        ChatClientResponse advisorResponse = buildAdvisorResponse("Use the official charger.", documents);
+
+        when(ragChatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.advisors(any(Consumer.class))).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.chatClientResponse()).thenReturn(advisorResponse);
+
         ReferenceDto reference = new ReferenceDto("doc-1", "section-1", "document-123", "chunk-1");
         RagQueryResponse formatted = new RagQueryResponse("Use the official charger.", List.of(reference), 0.85);
         when(responseFormatter.format("Use the official charger.", documents, 0.85)).thenReturn(formatted);
-        ChatSession session = new ChatSession(42L, "test-user", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.answer").value("Use the official charger."))
-                .andExpect(jsonPath("$.confidence").value(0.85))
-                .andExpect(jsonPath("$.sessionId").value(42L));
+                .andExpect(jsonPath("$.confidence").value(0.85));
 
-        verify(queryPreprocessor).process("How to charge the EV?");
-        verify(retrievalService).retrieveAndRerank("how to charge the ev?");
-        verify(generationService).generate("How to charge the EV?", documents, "expert", "web");
+        verify(requestSpec).user("How to charge the EV?");
         verify(responseFormatter).format("Use the official charger.", documents, 0.85);
-        ArgumentCaptor<Optional<Long>> sessionIdCaptor = ArgumentCaptor.forClass(Optional.class);
-        ArgumentCaptor<String> userIdCaptor = ArgumentCaptor.forClass(String.class);
-        verify(chatHistoryService).createOrGetSession(sessionIdCaptor.capture(), any(), userIdCaptor.capture());
-        verify(chatHistoryService).saveNewMessage(eq(42L), eq("USER"), eq("How to charge the EV?"), isNull());
-        ArgumentCaptor<String> retrievalCaptor = ArgumentCaptor.forClass(String.class);
-        verify(chatHistoryService).saveNewMessage(eq(42L), eq("ASSISTANT"), eq("Use the official charger."),
-                retrievalCaptor.capture());
-        verifyNoMoreInteractions(queryPreprocessor, retrievalService, generationService, responseFormatter);
-        verifyNoMoreInteractions(chatHistoryService);
 
-        assertThat(sessionIdCaptor.getValue()).isEmpty();
-        assertThat(userIdCaptor.getValue()).isEqualTo("test-user");
-        assertThat(retrievalCaptor.getValue()).isNotBlank();
-        assertThat(objectMapper.readTree(retrievalCaptor.getValue()).get(0).get("documentId").asText())
-                .isEqualTo("document-123");
+        ArgumentCaptor<Consumer<ChatClient.AdvisorSpec>> advisorCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(requestSpec).advisors(advisorCaptor.capture());
+        ChatClient.AdvisorSpec advisorSpec = mock(ChatClient.AdvisorSpec.class);
+        when(advisorSpec.param(anyString(), any())).thenReturn(advisorSpec);
+        advisorCaptor.getValue().accept(advisorSpec);
+        verify(advisorSpec).param("originalQuestion", "How to charge the EV?");
+        verify(advisorSpec).param("persona", "expert");
+        verify(advisorSpec).param("channel", "web");
     }
 
     @Test
-    @DisplayName("原始查询会传递到 QueryPreprocessor 并用于检")
-    void testQueryPreprocessingIsCalled() throws Exception {
+    @DisplayName("缺省 persona/channel 会透传默认值")
+    void testDefaultPersonaAndChannel() throws Exception {
         RagQueryRequest request = new RagQueryRequest("  raw query  ", null, null);
-        request.setUserId("csr-1");
-
         List<Document> documents = List.of(new Document("doc"));
-        when(queryPreprocessor.process("  raw query  ")).thenReturn("processed");
-        when(retrievalService.retrieveAndRerank("processed")).thenReturn(documents);
-        when(generationService.generate(eq("  raw query  "), eq(documents), eq("default"), eq("generic")))
-                .thenReturn("answer");
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.CallResponseSpec callResponseSpec = mock(ChatClient.CallResponseSpec.class);
+        ChatClientResponse advisorResponse = buildAdvisorResponse("answer", documents);
+
+        when(ragChatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.advisors(any(Consumer.class))).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.chatClientResponse()).thenReturn(advisorResponse);
         when(responseFormatter.format("answer", documents, null))
                 .thenReturn(new RagQueryResponse("answer", Collections.emptyList(), 0.0));
-        ChatSession session = new ChatSession(7L, "csr-1", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isOk());
 
-        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
-        verify(queryPreprocessor).process(queryCaptor.capture());
-        verify(retrievalService).retrieveAndRerank("processed");
-        verify(generationService).generate("  raw query  ", documents, "default", "generic");
         verify(responseFormatter).format("answer", documents, null);
-        verify(chatHistoryService).createOrGetSession(eq(Optional.empty()), any(), eq("csr-1"));
-        verify(chatHistoryService).saveNewMessage(eq(7L), eq("USER"), eq("  raw query  "), isNull());
-        verify(chatHistoryService).saveNewMessage(eq(7L), eq("ASSISTANT"), eq("answer"), isNull());
+        ArgumentCaptor<Consumer<ChatClient.AdvisorSpec>> advisorCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(requestSpec).advisors(advisorCaptor.capture());
+        ChatClient.AdvisorSpec advisorSpec = mock(ChatClient.AdvisorSpec.class);
+        when(advisorSpec.param(anyString(), any())).thenReturn(advisorSpec);
+        advisorCaptor.getValue().accept(advisorSpec);
+        verify(advisorSpec).param("persona", "客服人员");
+        verify(advisorSpec).param("channel", "售后服务");
     }
 
     @Test
-    @DisplayName("检索为空时仍然返回回退回答")
+    @DisplayName("检索为空时仍返回兼容结构")
     void testFallbackFlowAtApiLevel() throws Exception {
         RagQueryRequest request = new RagQueryRequest("No docs?", "guest", "app");
-        request.setUserId("guest-user");
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.CallResponseSpec callResponseSpec = mock(ChatClient.CallResponseSpec.class);
+        ChatClientResponse advisorResponse = buildAdvisorResponse("Fallback answer", Collections.emptyList());
 
-        when(queryPreprocessor.process("No docs?")).thenReturn("no docs?");
-        when(retrievalService.retrieveAndRerank("no docs?")).thenReturn(Collections.emptyList());
-        when(generationService.generate("No docs?", Collections.emptyList(), "guest", "app"))
-                .thenReturn("Fallback answer");
-        RagQueryResponse response = new RagQueryResponse("Fallback answer", Collections.emptyList(), 0.0);
+        when(ragChatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.advisors(any(Consumer.class))).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.chatClientResponse()).thenReturn(advisorResponse);
         when(responseFormatter.format("Fallback answer", Collections.emptyList(), null))
-                .thenReturn(response);
-        ChatSession session = new ChatSession(88L, "guest-user", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
+                .thenReturn(new RagQueryResponse("Fallback answer", Collections.emptyList(), 0.0));
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.answer").value("Fallback answer"))
-                .andExpect(jsonPath("$.references").isArray())
-                .andExpect(jsonPath("$.sessionId").value(88L));
-
-        verify(chatHistoryService).createOrGetSession(eq(Optional.empty()), any(), eq("guest-user"));
-        verify(chatHistoryService).saveNewMessage(eq(88L), eq("USER"), eq("No docs?"), isNull());
-        verify(chatHistoryService).saveNewMessage(eq(88L), eq("ASSISTANT"), eq("Fallback answer"), isNull());
+                .andExpect(jsonPath("$.references").isArray());
     }
 
     @Test
     @DisplayName("下游异常会被 GlobalExceptionHandler 捕获")
     void testGlobalExceptionHandler() throws Exception {
         RagQueryRequest request = new RagQueryRequest("trigger error", null, null);
-        request.setUserId("error-user");
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
 
-        when(queryPreprocessor.process("trigger error")).thenReturn("trigger error");
-        ChatSession session = new ChatSession(1L, "error-user", null, null, ChatSessionStatus.ACTIVE, null, null);
-        when(chatHistoryService.createOrGetSession(any(), any(), anyString())).thenReturn(session);
-        when(retrievalService.retrieveAndRerank("trigger error"))
-                .thenThrow(new RuntimeException("retrieval failed"));
+        when(ragChatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.advisors(any(Consumer.class))).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.call()).thenThrow(new RuntimeException("advisor failed"));
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").value("Internal Server Error"))
-                .andExpect(jsonPath("$.message").value("retrieval failed"));
+                .andExpect(jsonPath("$.message").value("advisor failed"));
 
-        verify(queryPreprocessor).process("trigger error");
-        verify(retrievalService).retrieveAndRerank("trigger error");
-        verifyNoInteractions(chatHistoryService);
-        verifyNoMoreInteractions(queryPreprocessor, retrievalService, generationService, responseFormatter);
+        verifyNoInteractions(responseFormatter);
     }
 
     @Test
-    @DisplayName("缺少问题时返�?400")
+    @DisplayName("缺少问题时返回 400")
     void testBlankQuestionIsRejected() throws Exception {
         RagQueryRequest request = new RagQueryRequest("   ", null, null);
-        request.setUserId("user-123");
 
         mockMvc.perform(post("/api/v1/rag/query")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -208,6 +178,12 @@ class RagControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Bad Request"));
 
-        verifyNoInteractions(chatHistoryService);
+        verifyNoInteractions(ragChatClient, responseFormatter);
+    }
+
+    private ChatClientResponse buildAdvisorResponse(String answer, List<Document> documents) {
+        ChatResponse chatResponse = new ChatResponse(List.of(new Generation(new AssistantMessage(answer))));
+        return new ChatClientResponse(chatResponse,
+                Map.of(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT, documents));
     }
 }

@@ -19,8 +19,12 @@ import com.example.springaialibaba.core.client.RerankClient;
 
 /**
  * Service responsible for retrieving documents from the configured {@link VectorStore}.
+ *
+ * @deprecated Phase 1 迁移后，/query 已切换到 Advisor 管道，请优先使用
+ * {@code RetrievalAugmentationAdvisor} 链路。
  */
 @Service
+@Deprecated
 public class RetrievalService {
 
     private static final Logger log = LoggerFactory.getLogger(RetrievalService.class);
