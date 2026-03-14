@@ -1,6 +1,9 @@
 package com.example.springaialibaba.core.rag.modules;
 
 import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
+import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -64,11 +67,74 @@ public class CustomQueryTransformer implements QueryTransformer {
             context.putAll(query.context());
         }
         context.putIfAbsent("originalQuestion", original);
+        applyMetadataFilters(context);
 
         log.debug("QueryTransformer: [{}] → [{}]", original, cleaned);
-        return query.mutate()
-                .text(cleaned)
-                .context(context)
-                .build();
+        return query.mutate().text(cleaned).context(context).build();
+    }
+
+    private void applyMetadataFilters(Map<String, Object> context) {
+        putIfHasText(context, RagMetadataFilterContext.DOCUMENT_SOURCE,
+                normaliseText(context.get(RagMetadataFilterContext.DOCUMENT_SOURCE)));
+        putIfHasText(context, RagMetadataFilterContext.DOCUMENT_TYPE,
+                normaliseText(context.get(RagMetadataFilterContext.DOCUMENT_TYPE)));
+        putIfHasText(context, RagMetadataFilterContext.DATE_FROM,
+                normaliseDate(context.get(RagMetadataFilterContext.DATE_FROM), RagMetadataFilterContext.DATE_FROM));
+        putIfHasText(context, RagMetadataFilterContext.DATE_TO,
+                normaliseDate(context.get(RagMetadataFilterContext.DATE_TO), RagMetadataFilterContext.DATE_TO));
+
+        Map<String, String> filters = normaliseFilters(context.get(RagMetadataFilterContext.FILTERS));
+        if (filters.isEmpty()) {
+            context.remove(RagMetadataFilterContext.FILTERS);
+        }
+        else {
+            context.put(RagMetadataFilterContext.FILTERS, filters);
+        }
+    }
+
+    private void putIfHasText(Map<String, Object> context, String key, String value) {
+        if (StringUtils.hasText(value)) {
+            context.put(key, value);
+        }
+        else {
+            context.remove(key);
+        }
+    }
+
+    private String normaliseText(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String text = value.toString().trim();
+        return StringUtils.hasText(text) ? text : null;
+    }
+
+    private String normaliseDate(Object value, String key) {
+        String text = normaliseText(value);
+        if (!StringUtils.hasText(text)) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(text).toString();
+        }
+        catch (DateTimeParseException ex) {
+            log.warn("Ignoring invalid metadata filter date {}={}", key, text);
+            return null;
+        }
+    }
+
+    private Map<String, String> normaliseFilters(Object value) {
+        if (!(value instanceof Map<?, ?> rawFilters) || rawFilters.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, String> filters = new LinkedHashMap<>();
+        rawFilters.forEach((key, filterValue) -> {
+            String normalisedKey = normaliseText(key);
+            String normalisedValue = normaliseText(filterValue);
+            if (StringUtils.hasText(normalisedKey) && StringUtils.hasText(normalisedValue)) {
+                filters.put(normalisedKey, normalisedValue);
+            }
+        });
+        return filters;
     }
 }

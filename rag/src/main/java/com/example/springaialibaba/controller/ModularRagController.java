@@ -1,9 +1,11 @@
 package com.example.springaialibaba.controller;
 
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
+import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -54,10 +56,12 @@ public class ModularRagController {
         String channel = normaliseOptionalInput(request.getChannel(), DEFAULT_CHANNEL);
 
         ChatClientResponse advisorResponse = chatClient.prompt()
-                .advisors(spec -> spec
-                        .param("originalQuestion", rawQuestion)
-                        .param("persona", persona)
-                        .param("channel", channel))
+                .advisors(spec -> {
+                    spec.param("originalQuestion", rawQuestion)
+                            .param("persona", persona)
+                            .param("channel", channel);
+                    applyMetadataFilterParams(spec, request);
+                })
                 .user(rawQuestion)
                 .call()
                 .chatClientResponse();
@@ -131,5 +135,35 @@ public class ModularRagController {
             }
         }
         return null;
+    }
+
+    private void applyMetadataFilterParams(ChatClient.AdvisorSpec advisorSpec, RagQueryRequest request) {
+        if (request == null) {
+            return;
+        }
+        putAdvisorParamIfHasText(advisorSpec, RagMetadataFilterContext.DOCUMENT_SOURCE, request.getDocumentSource());
+        putAdvisorParamIfHasText(advisorSpec, RagMetadataFilterContext.DOCUMENT_TYPE, request.getDocumentType());
+        putAdvisorParamIfHasText(advisorSpec, RagMetadataFilterContext.DATE_FROM, request.getDateFrom());
+        putAdvisorParamIfHasText(advisorSpec, RagMetadataFilterContext.DATE_TO, request.getDateTo());
+
+        if (request.getFilters() == null || request.getFilters().isEmpty()) {
+            return;
+        }
+
+        Map<String, String> sanitizedFilters = new LinkedHashMap<>();
+        request.getFilters().forEach((key, value) -> {
+            if (StringUtils.hasText(key) && StringUtils.hasText(value)) {
+                sanitizedFilters.put(key.trim(), value.trim());
+            }
+        });
+        if (!sanitizedFilters.isEmpty()) {
+            advisorSpec.param(RagMetadataFilterContext.FILTERS, sanitizedFilters);
+        }
+    }
+
+    private void putAdvisorParamIfHasText(ChatClient.AdvisorSpec advisorSpec, String key, String value) {
+        if (StringUtils.hasText(value)) {
+            advisorSpec.param(key, value.trim());
+        }
     }
 }

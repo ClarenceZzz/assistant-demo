@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
+import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import com.example.springaialibaba.model.dto.ReferenceDto;
@@ -51,9 +52,15 @@ class ModularRagControllerTest {
     private ResponseFormatter responseFormatter;
 
     @Test
-    @DisplayName("成功走 Advisor 链路并保持响应兼容")
+    @DisplayName("成功走通 Advisor 链路并透传过滤参数")
     void testSuccessfulAdvisorFlow() throws Exception {
         RagQueryRequest request = new RagQueryRequest("How to charge the EV?", "expert", "web");
+        request.setDocumentSource("faq");
+        request.setDocumentType("pdf");
+        request.setDateFrom("2025-01-01");
+        request.setDateTo("2025-12-31");
+        request.setFilters(Map.of("region", "cn", "product", "ev"));
+
         List<Document> documents = List.of(new Document("doc-content", Map.of("score", 0.85)));
         ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
         ChatClient.CallResponseSpec callResponseSpec = mock(ChatClient.CallResponseSpec.class);
@@ -87,6 +94,11 @@ class ModularRagControllerTest {
         verify(advisorSpec).param("originalQuestion", "How to charge the EV?");
         verify(advisorSpec).param("persona", "expert");
         verify(advisorSpec).param("channel", "web");
+        verify(advisorSpec).param(RagMetadataFilterContext.DOCUMENT_SOURCE, "faq");
+        verify(advisorSpec).param(RagMetadataFilterContext.DOCUMENT_TYPE, "pdf");
+        verify(advisorSpec).param(RagMetadataFilterContext.DATE_FROM, "2025-01-01");
+        verify(advisorSpec).param(RagMetadataFilterContext.DATE_TO, "2025-12-31");
+        verify(advisorSpec).param(RagMetadataFilterContext.FILTERS, Map.of("region", "cn", "product", "ev"));
     }
 
     @Test
@@ -122,7 +134,7 @@ class ModularRagControllerTest {
     }
 
     @Test
-    @DisplayName("检索为空时仍返回兼容结构")
+    @DisplayName("检索为空时仍返回兼容结果")
     void testFallbackFlowAtApiLevel() throws Exception {
         RagQueryRequest request = new RagQueryRequest("No docs?", "guest", "app");
         ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);

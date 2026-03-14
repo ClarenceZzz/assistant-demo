@@ -1,5 +1,8 @@
 package com.example.springaialibaba.core.rag.modules;
 
+import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -7,8 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.util.StringUtils;
 
 /**
@@ -66,14 +71,99 @@ public class CustomDocumentRetriever implements DocumentRetriever {
         Map<String, Object> context = query.context() != null ? query.context() : Map.of();
         int topK = resolveTopK(context.get("topK"));
         double threshold = resolveSimilarityThreshold(context);
-        SearchRequest searchRequest = SearchRequest.builder()
+
+        SearchRequest.Builder requestBuilder = SearchRequest.builder()
                 .query(query.text())
                 .topK(topK)
-                .similarityThreshold(threshold)
-                .build();
+                .similarityThreshold(threshold);
 
-        List<Document> results = vectorStore.similaritySearch(searchRequest);
+        applyFilterExpression(requestBuilder, context);
+
+        List<Document> results = vectorStore.similaritySearch(requestBuilder.build());
         return results != null ? results : List.of();
+    }
+
+    private void applyFilterExpression(SearchRequest.Builder requestBuilder, Map<String, Object> context) {
+        if (context == null || context.isEmpty()) {
+            return;
+        }
+
+        Object filterExpression = context.get(VectorStoreDocumentRetriever.FILTER_EXPRESSION);
+        if (filterExpression instanceof Filter.Expression expression) {
+            log.debug("DocumentRetriever using pre-built filter expression");
+            requestBuilder.filterExpression(expression);
+            return;
+        }
+        if (filterExpression instanceof String textExpression && StringUtils.hasText(textExpression)) {
+            log.debug("DocumentRetriever using filter expression text={}", textExpression);
+            requestBuilder.filterExpression(textExpression.trim());
+            return;
+        }
+
+        String structuredFilterExpression = buildStructuredFilterExpression(context);
+        if (StringUtils.hasText(structuredFilterExpression)) {
+            log.debug("DocumentRetriever using structured filter expression={}", structuredFilterExpression);
+            requestBuilder.filterExpression(structuredFilterExpression);
+        }
+    }
+
+    private String buildStructuredFilterExpression(Map<String, Object> context) {
+        List<String> clauses = new ArrayList<>();
+
+        Map<String, String> equalityFilters = new LinkedHashMap<>();
+        addEqualityFilter(equalityFilters, RagMetadataFilterContext.METADATA_FIELD_SOURCE,
+                context.get(RagMetadataFilterContext.DOCUMENT_SOURCE));
+        addEqualityFilter(equalityFilters, RagMetadataFilterContext.METADATA_FIELD_TYPE,
+                context.get(RagMetadataFilterContext.DOCUMENT_TYPE));
+
+        if (context.get(RagMetadataFilterContext.FILTERS) instanceof Map<?, ?> rawFilters) {
+            rawFilters.forEach((key, value) -> {
+                String filterKey = normaliseText(key);
+                if (!StringUtils.hasText(filterKey)) {
+                    return;
+                }
+                equalityFilters.putIfAbsent(filterKey, normaliseText(value));
+            });
+        }
+
+        equalityFilters.forEach((key, value) -> {
+            if (StringUtils.hasText(value)) {
+                clauses.add(key + " == '" + escapeFilterValue(value) + "'");
+            }
+        });
+
+        addRangeClause(clauses, RagMetadataFilterContext.METADATA_FIELD_DATE, ">=",
+                context.get(RagMetadataFilterContext.DATE_FROM));
+        addRangeClause(clauses, RagMetadataFilterContext.METADATA_FIELD_DATE, "<=",
+                context.get(RagMetadataFilterContext.DATE_TO));
+
+        return clauses.isEmpty() ? null : String.join(" && ", clauses);
+    }
+
+    private void addEqualityFilter(Map<String, String> filters, String key, Object value) {
+        String normalisedValue = normaliseText(value);
+        if (StringUtils.hasText(normalisedValue)) {
+            filters.put(key, normalisedValue);
+        }
+    }
+
+    private void addRangeClause(List<String> clauses, String key, String operator, Object value) {
+        String normalisedValue = normaliseText(value);
+        if (StringUtils.hasText(normalisedValue)) {
+            clauses.add(key + " " + operator + " '" + escapeFilterValue(normalisedValue) + "'");
+        }
+    }
+
+    private String normaliseText(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String text = value.toString().trim();
+        return StringUtils.hasText(text) ? text : null;
+    }
+
+    private String escapeFilterValue(String value) {
+        return value.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     private int resolveTopK(Object topKValue) {

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
 import com.example.springaialibaba.core.rag.modules.CustomDocumentRetriever;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 
@@ -33,10 +35,17 @@ class CustomDocumentRetrieverTest {
     }
 
     @Test
-    void shouldUseContextTopKAndScore() {
+    void shouldUseContextTopKAndStructuredMetadataFilters() {
         Query query = Query.builder()
                 .text("charge ev")
-                .context(Map.of("topK", 3, "score", 0.8))
+                .context(Map.of(
+                        "topK", 3,
+                        "score", 0.8,
+                        RagMetadataFilterContext.DOCUMENT_SOURCE, "faq",
+                        RagMetadataFilterContext.DOCUMENT_TYPE, "pdf",
+                        RagMetadataFilterContext.DATE_FROM, "2025-01-01",
+                        RagMetadataFilterContext.DATE_TO, "2025-12-31",
+                        RagMetadataFilterContext.FILTERS, Map.of("region", "cn")))
                 .build();
         List<Document> documents = List.of(new Document("doc"));
         when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(documents);
@@ -50,6 +59,34 @@ class CustomDocumentRetrieverTest {
         assertThat(request.getQuery()).isEqualTo("charge ev");
         assertThat(request.getTopK()).isEqualTo(3);
         assertThat(request.getSimilarityThreshold()).isEqualTo(0.8);
+        assertThat(request.getFilterExpression()).isNotNull();
+        assertThat(String.valueOf(request.getFilterExpression()))
+                .contains("source")
+                .contains("faq")
+                .contains("type")
+                .contains("pdf")
+                .contains("date")
+                .contains("2025-01-01")
+                .contains("2025-12-31")
+                .contains("region")
+                .contains("cn");
+    }
+
+    @Test
+    void shouldPreferExplicitFilterExpressionOverride() {
+        Query query = Query.builder()
+                .text("question")
+                .context(Map.of(VectorStoreDocumentRetriever.FILTER_EXPRESSION, "type == 'manual'"))
+                .build();
+        when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(List.of(new Document("doc")));
+
+        retriever.retrieve(query);
+
+        ArgumentCaptor<SearchRequest> requestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
+        verify(vectorStore).similaritySearch(requestCaptor.capture());
+        SearchRequest request = requestCaptor.getValue();
+        assertThat(request.getFilterExpression()).isNotNull();
+        assertThat(String.valueOf(request.getFilterExpression())).contains("manual");
     }
 
     @Test
@@ -65,6 +102,7 @@ class CustomDocumentRetrieverTest {
         SearchRequest request = requestCaptor.getValue();
         assertThat(request.getTopK()).isEqualTo(20);
         assertThat(request.getSimilarityThreshold()).isEqualTo(0.7);
+        assertThat(request.getFilterExpression()).isNull();
     }
 
     @Test
