@@ -80,6 +80,7 @@ public class CustomDocumentRetriever implements DocumentRetriever {
         applyFilterExpression(requestBuilder, context);
 
         List<Document> results = vectorStore.similaritySearch(requestBuilder.build());
+        log.info("return results " + results.size());
         return results != null ? results : List.of();
     }
 
@@ -88,17 +89,17 @@ public class CustomDocumentRetriever implements DocumentRetriever {
             return;
         }
 
-        Object filterExpression = context.get(VectorStoreDocumentRetriever.FILTER_EXPRESSION);
-        if (filterExpression instanceof Filter.Expression expression) {
-            log.debug("DocumentRetriever using pre-built filter expression");
-            requestBuilder.filterExpression(expression);
-            return;
-        }
-        if (filterExpression instanceof String textExpression && StringUtils.hasText(textExpression)) {
-            log.debug("DocumentRetriever using filter expression text={}", textExpression);
-            requestBuilder.filterExpression(textExpression.trim());
-            return;
-        }
+        // Object filterExpression = context.get(VectorStoreDocumentRetriever.FILTER_EXPRESSION);
+        // if (filterExpression instanceof Filter.Expression expression) {
+        //     log.debug("DocumentRetriever using pre-built filter expression");
+        //     requestBuilder.filterExpression(expression);
+        //     return;
+        // }
+        // if (filterExpression instanceof String textExpression && StringUtils.hasText(textExpression)) {
+        //     log.debug("DocumentRetriever using filter expression text={}", textExpression);
+        //     requestBuilder.filterExpression(textExpression.trim());
+        //     return;
+        // }
 
         String structuredFilterExpression = buildStructuredFilterExpression(context);
         if (StringUtils.hasText(structuredFilterExpression)) {
