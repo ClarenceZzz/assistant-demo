@@ -2,6 +2,7 @@ package com.example.springaialibaba.core.rag.modules;
 
 import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
+import com.example.springaialibaba.core.rag.RagQueryContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
@@ -24,6 +25,8 @@ import org.springframework.util.StringUtils;
  * QueryExpander → DocumentRetriever → DocumentJoiner
  *     → DocumentPostProcessor → QueryAugmenter → LLM
  * </pre>
+ *
+ * <p><b>当前角色：</b>作为 Phase 3 双阶段链路中的第一级清洗器，负责清洗查询并规整过滤条件上下文。</p>
  *
  * <p><b>职责：</b>对单个 Query 进行 1 → 1 的转换。适合做查询清洗、关键词提取、
  * 敏感词过滤、简繁转换等不需要大模型参与的预处理逻辑。
@@ -66,7 +69,8 @@ public class CustomQueryTransformer implements QueryTransformer {
         if (query.context() != null) {
             context.putAll(query.context());
         }
-        context.putIfAbsent("originalQuestion", original);
+        context.putIfAbsent(RagQueryContext.ORIGINAL_QUESTION, original);
+        context.put(RagQueryContext.CLEANED_QUESTION, cleaned);
         applyMetadataFilters(context);
 
         log.debug("QueryTransformer: [{}] → [{}]", original, cleaned);

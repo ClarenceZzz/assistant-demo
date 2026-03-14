@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
+import com.example.springaialibaba.core.rag.RagQueryContext;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import com.example.springaialibaba.model.dto.ReferenceDto;
@@ -78,10 +79,12 @@ class ModularRagControllerTest {
 
         mockMvc.perform(post("/api/v1/rag/modular/query")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(request)))
+                .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.answer").value("Use the official charger."))
-                .andExpect(jsonPath("$.confidence").value(0.85));
+                .andExpect(jsonPath("$.confidence").value(0.85))
+                .andExpect(jsonPath("$.references[0].title").value("doc-1"))
+                .andExpect(jsonPath("$.references[0].documentId").value("document-123"));
 
         verify(requestSpec).user("How to charge the EV?");
         verify(responseFormatter).format("Use the official charger.", documents, 0.85);
@@ -91,9 +94,9 @@ class ModularRagControllerTest {
         ChatClient.AdvisorSpec advisorSpec = mock(ChatClient.AdvisorSpec.class);
         when(advisorSpec.param(anyString(), any())).thenReturn(advisorSpec);
         advisorCaptor.getValue().accept(advisorSpec);
-        verify(advisorSpec).param("originalQuestion", "How to charge the EV?");
-        verify(advisorSpec).param("persona", "expert");
-        verify(advisorSpec).param("channel", "web");
+        verify(advisorSpec).param(RagQueryContext.ORIGINAL_QUESTION, "How to charge the EV?");
+        verify(advisorSpec).param(RagQueryContext.PERSONA, "expert");
+        verify(advisorSpec).param(RagQueryContext.CHANNEL, "web");
         verify(advisorSpec).param(RagMetadataFilterContext.DOCUMENT_SOURCE, "faq");
         verify(advisorSpec).param(RagMetadataFilterContext.DOCUMENT_TYPE, "pdf");
         verify(advisorSpec).param(RagMetadataFilterContext.DATE_FROM, "2025-01-01");
@@ -129,8 +132,8 @@ class ModularRagControllerTest {
         ChatClient.AdvisorSpec advisorSpec = mock(ChatClient.AdvisorSpec.class);
         when(advisorSpec.param(anyString(), any())).thenReturn(advisorSpec);
         advisorCaptor.getValue().accept(advisorSpec);
-        verify(advisorSpec).param("persona", "客服人员");
-        verify(advisorSpec).param("channel", "售后服务");
+        verify(advisorSpec).param(RagQueryContext.PERSONA, "客服人员");
+        verify(advisorSpec).param(RagQueryContext.CHANNEL, "售后服务");
     }
 
     @Test

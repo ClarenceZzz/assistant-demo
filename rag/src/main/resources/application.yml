@@ -46,6 +46,10 @@ server:
   port: 8080
 
 app:
+  rag:
+    rewrite:
+      enabled: ${APP_RAG_REWRITE_ENABLED:true}
+      prompt-template: ${APP_RAG_REWRITE_PROMPT_TEMPLATE:classpath:prompts/rag_rewrite_prompt.txt}
   retrieval:
     initial-top-k: ${APP_RETRIEVAL_INITIAL_TOP_K:20}
     final-top-n: ${APP_RETRIEVAL_FINAL_TOP_N:5}

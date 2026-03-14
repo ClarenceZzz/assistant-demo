@@ -1,5 +1,6 @@
 package com.example.springaialibaba.core.rag.modules;
 
+import com.example.springaialibaba.core.rag.RagQueryContext;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,9 +54,9 @@ public class CustomQueryAugmenter implements QueryAugmenter {
     @Override
     public Query augment(Query query, List<Document> documents) {
         log.debug("QueryAugmenter: 基于 {} 篇文档增强查询", documents.size());
-        String originalQuestion = resolveContextValue(query, "originalQuestion", query.text());
-        String persona = resolveContextValue(query, "persona", DEFAULT_PERSONA);
-        String channel = resolveContextValue(query, "channel", DEFAULT_CHANNEL);
+        String originalQuestion = resolveContextValue(query, RagQueryContext.ORIGINAL_QUESTION, query.text());
+        String persona = resolveContextValue(query, RagQueryContext.PERSONA, DEFAULT_PERSONA);
+        String channel = resolveContextValue(query, RagQueryContext.CHANNEL, DEFAULT_CHANNEL);
 
         if (documents.isEmpty()) {
             String fallback = """

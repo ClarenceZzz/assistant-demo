@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
+import com.example.springaialibaba.core.rag.RagQueryContext;
 import com.example.springaialibaba.core.rag.modules.CustomQueryTransformer;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,8 @@ class CustomQueryTransformerTest {
         Query transformed = transformer.transform(query);
 
         assertThat(transformed.text()).isEqualTo("raw query");
-        assertThat(transformed.context()).containsEntry("originalQuestion", "  raw query  ");
+        assertThat(transformed.context()).containsEntry(RagQueryContext.ORIGINAL_QUESTION, "  raw query  ");
+        assertThat(transformed.context()).containsEntry(RagQueryContext.CLEANED_QUESTION, "raw query");
         assertThat(transformed.context()).containsEntry(RagMetadataFilterContext.DOCUMENT_SOURCE, "faq");
         assertThat(transformed.context()).containsEntry(RagMetadataFilterContext.DOCUMENT_TYPE, "pdf");
         assertThat(transformed.context()).containsEntry(RagMetadataFilterContext.DATE_FROM, "2025-01-01");
@@ -66,6 +68,7 @@ class CustomQueryTransformerTest {
 
         Query transformed = transformer.transform(query);
 
+        assertThat(transformed.context()).containsEntry(RagQueryContext.CLEANED_QUESTION, "query");
         assertThat(transformed.context()).doesNotContainKey(RagMetadataFilterContext.DATE_FROM);
         assertThat(transformed.context()).containsEntry(RagMetadataFilterContext.DATE_TO, "2025-02-01");
     }

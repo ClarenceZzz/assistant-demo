@@ -6,11 +6,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import com.example.springaialibaba.config.properties.RagRewriteProperties;
 import com.example.springaialibaba.config.properties.SiliconFlowRerankProperties;
 import com.example.springaialibaba.config.properties.PromptProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({SiliconFlowRerankProperties.class, PromptProperties.class})
+@EnableConfigurationProperties({SiliconFlowRerankProperties.class, PromptProperties.class, RagRewriteProperties.class})
 public class SpringAiAlibabaApplication {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiAlibabaApplication.class);

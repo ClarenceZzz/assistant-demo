@@ -2,6 +2,7 @@ package com.example.springaialibaba.controller;
 
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
+import com.example.springaialibaba.core.rag.RagQueryContext;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import java.util.ArrayList;
@@ -57,9 +58,9 @@ public class ModularRagController {
 
         ChatClientResponse advisorResponse = chatClient.prompt()
                 .advisors(spec -> {
-                    spec.param("originalQuestion", rawQuestion)
-                            .param("persona", persona)
-                            .param("channel", channel);
+                    spec.param(RagQueryContext.ORIGINAL_QUESTION, rawQuestion)
+                            .param(RagQueryContext.PERSONA, persona)
+                            .param(RagQueryContext.CHANNEL, channel);
                     applyMetadataFilterParams(spec, request);
                 })
                 .user(rawQuestion)

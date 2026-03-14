@@ -21,3 +21,8 @@ prompt:
   defaults:
     persona: 测试默认角色
     channel: 测试渠道
+
+app:
+  rag:
+    rewrite:
+      enabled: false
