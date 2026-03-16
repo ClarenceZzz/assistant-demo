@@ -3,6 +3,7 @@ package com.example.springaialibaba.core.rag.modules;
 import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
 import com.example.springaialibaba.core.rag.RagQueryContext;
+import com.example.springaialibaba.utils.RagValueUtils;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
@@ -79,9 +80,9 @@ public class CustomQueryTransformer implements QueryTransformer {
 
     private void applyMetadataFilters(Map<String, Object> context) {
         putIfHasText(context, RagMetadataFilterContext.DOCUMENT_SOURCE,
-                normaliseText(context.get(RagMetadataFilterContext.DOCUMENT_SOURCE)));
+                RagValueUtils.trimToNull(context.get(RagMetadataFilterContext.DOCUMENT_SOURCE)));
         putIfHasText(context, RagMetadataFilterContext.DOCUMENT_TYPE,
-                normaliseText(context.get(RagMetadataFilterContext.DOCUMENT_TYPE)));
+                RagValueUtils.trimToNull(context.get(RagMetadataFilterContext.DOCUMENT_TYPE)));
         putIfHasText(context, RagMetadataFilterContext.DATE_FROM,
                 normaliseDate(context.get(RagMetadataFilterContext.DATE_FROM), RagMetadataFilterContext.DATE_FROM));
         putIfHasText(context, RagMetadataFilterContext.DATE_TO,
@@ -105,16 +106,8 @@ public class CustomQueryTransformer implements QueryTransformer {
         }
     }
 
-    private String normaliseText(Object value) {
-        if (value == null) {
-            return null;
-        }
-        String text = value.toString().trim();
-        return StringUtils.hasText(text) ? text : null;
-    }
-
     private String normaliseDate(Object value, String key) {
-        String text = normaliseText(value);
+        String text = RagValueUtils.trimToNull(value);
         if (!StringUtils.hasText(text)) {
             return null;
         }
@@ -133,8 +126,8 @@ public class CustomQueryTransformer implements QueryTransformer {
         }
         Map<String, String> filters = new LinkedHashMap<>();
         rawFilters.forEach((key, filterValue) -> {
-            String normalisedKey = normaliseText(key);
-            String normalisedValue = normaliseText(filterValue);
+            String normalisedKey = RagValueUtils.trimToNull(key);
+            String normalisedValue = RagValueUtils.trimToNull(filterValue);
             if (StringUtils.hasText(normalisedKey) && StringUtils.hasText(normalisedValue)) {
                 filters.put(normalisedKey, normalisedValue);
             }

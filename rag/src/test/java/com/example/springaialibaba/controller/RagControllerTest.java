@@ -16,6 +16,7 @@ import com.example.springaialibaba.core.rag.RetrievalService;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import com.example.springaialibaba.model.dto.ReferenceDto;
+import com.example.springaialibaba.service.ChatHistoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,8 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -49,6 +52,15 @@ class RagControllerTest {
 
     @MockBean
     private ResponseFormatter responseFormatter;
+
+    @MockBean
+    private ChatHistoryService chatHistoryService;
+
+    @MockBean
+    private RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
+
+    @MockBean
+    private OpenAiChatModel chatModel;
 
     @Test
     @DisplayName("成功编排旧手动链路并保持响应兼容")

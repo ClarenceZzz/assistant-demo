@@ -1,6 +1,7 @@
 package com.example.springaialibaba.core.rag.modules;
 
 import com.example.springaialibaba.core.rag.RagQueryContext;
+import com.example.springaialibaba.utils.RagValueUtils;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -32,8 +33,10 @@ public class SafeRewriteQueryTransformer implements QueryTransformer {
             context.putAll(query.context());
         }
 
-        String originalQuestion = resolveContextValue(context, RagQueryContext.ORIGINAL_QUESTION, query.text());
-        String cleanedQuestion = resolveContextValue(context, RagQueryContext.CLEANED_QUESTION, query.text());
+        String originalQuestion = RagValueUtils.resolveContextValueTrimmed(context, RagQueryContext.ORIGINAL_QUESTION,
+                query.text());
+        String cleanedQuestion = RagValueUtils.resolveContextValueTrimmed(context, RagQueryContext.CLEANED_QUESTION,
+                query.text());
         context.putIfAbsent(RagQueryContext.ORIGINAL_QUESTION, originalQuestion);
         context.put(RagQueryContext.CLEANED_QUESTION, cleanedQuestion);
 
@@ -69,14 +72,6 @@ public class SafeRewriteQueryTransformer implements QueryTransformer {
         log.info("Query rewrite trace: original=[{}], cleaned=[{}], rewritten=[{}]",
                 originalQuestion, cleanedQuestion, cleanedQuestion);
         return query.mutate().text(cleanedQuestion).context(context).build();
-    }
-
-    private String resolveContextValue(Map<String, Object> context, String key, String defaultValue) {
-        Object raw = context.get(key);
-        if (raw instanceof String stringValue && StringUtils.hasText(stringValue)) {
-            return stringValue.trim();
-        }
-        return defaultValue != null ? defaultValue.trim() : "";
     }
 
     private String normaliseRewrittenText(String value) {

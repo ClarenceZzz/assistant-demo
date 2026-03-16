@@ -1,7 +1,6 @@
 package com.example.springaialibaba.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -12,7 +11,6 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +25,7 @@ import com.example.springaialibaba.core.formatter.ResponseFormatter;
 import com.example.springaialibaba.core.rag.GenerationService;
 import com.example.springaialibaba.core.preprocessor.QueryPreprocessor;
 import com.example.springaialibaba.core.rag.RetrievalService;
+import com.example.springaialibaba.utils.RagValueUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -92,14 +91,14 @@ public class RagController {
         log.info("检索到 {} 条候选文档", documents.size());
 
         // 扮演的角色
-        String persona = normaliseOptionalInput(request.getPersona(), DEFAULT_PERSONA);
+        String persona = RagValueUtils.trimOrDefault(request.getPersona(), DEFAULT_PERSONA);
         // 用户提问的渠道
-        String channel = normaliseOptionalInput(request.getChannel(), DEFAULT_CHANNEL);
+        String channel = RagValueUtils.trimOrDefault(request.getChannel(), DEFAULT_CHANNEL);
 
         String answer = generationService.generate(rawQuestion, documents, persona, channel);
         log.info("生成的回答长度={}, 回答={}", answer != null ? answer.length() : 0, answer);
 
-        Double topScore = extractTopScore(documents);
+        Double topScore = RagValueUtils.extractTopScore(documents, log);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);
         // chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
         //         serialiseRetrievalContext(response.getReferences()));
@@ -113,13 +112,6 @@ public class RagController {
         String userId = "";
     }
 
-    private String normaliseOptionalInput(String value, String defaultValue) {
-        if (!StringUtils.hasText(value)) {
-            return defaultValue;
-        }
-        return value.trim();
-    }
-
     private String resolveUserId(RagQueryRequest request) {
         if (request == null) {
             return DEFAULT_USER_ID;
@@ -129,33 +121,6 @@ public class RagController {
             return DEFAULT_USER_ID;
         }
         return userId.trim();
-    }
-
-    private Double extractTopScore(List<Document> documents) {
-        if (CollectionUtils.isEmpty(documents)) {
-            return null;
-        }
-        Document first = documents.get(0);
-        Map<String, Object> metadata = first.getMetadata();
-        if (metadata == null || metadata.isEmpty()) {
-            return null;
-        }
-        Object rawScore = metadata.get("score");
-        if (rawScore == null) {
-            rawScore = metadata.get("rerank_score");
-        }
-        if (rawScore instanceof Number) {
-            return ((Number) rawScore).doubleValue();
-        }
-        if (rawScore instanceof String) {
-            try {
-                return Double.parseDouble(((String) rawScore));
-            }
-            catch (NumberFormatException ignored) {
-                log.debug("无法解析 rerank 分数：{}", rawScore);
-            }
-        }
-        return null;
     }
 
     private String serialiseRetrievalContext(List<ReferenceDto> references) {

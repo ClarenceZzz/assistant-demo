@@ -1,13 +1,13 @@
 package com.example.springaialibaba.core.rag.modules;
 
 import com.example.springaialibaba.core.rag.RagQueryContext;
+import com.example.springaialibaba.utils.RagValueUtils;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
-import org.springframework.util.StringUtils;
 
 /**
  * <h2>自定义查询增强器（生成前 - 第 6 步 / 最后一步）</h2>
@@ -54,9 +54,10 @@ public class CustomQueryAugmenter implements QueryAugmenter {
     @Override
     public Query augment(Query query, List<Document> documents) {
         log.debug("QueryAugmenter: 基于 {} 篇文档增强查询", documents.size());
-        String originalQuestion = resolveContextValue(query, RagQueryContext.ORIGINAL_QUESTION, query.text());
-        String persona = resolveContextValue(query, RagQueryContext.PERSONA, DEFAULT_PERSONA);
-        String channel = resolveContextValue(query, RagQueryContext.CHANNEL, DEFAULT_CHANNEL);
+        String originalQuestion = RagValueUtils.resolveContextValuePreserve(query, RagQueryContext.ORIGINAL_QUESTION,
+                query.text());
+        String persona = RagValueUtils.resolveContextValuePreserve(query, RagQueryContext.PERSONA, DEFAULT_PERSONA);
+        String channel = RagValueUtils.resolveContextValuePreserve(query, RagQueryContext.CHANNEL, DEFAULT_CHANNEL);
 
         if (documents.isEmpty()) {
             String fallback = """
@@ -91,16 +92,5 @@ public class CustomQueryAugmenter implements QueryAugmenter {
             sb.append("\n\n");
         }
         return sb.toString().trim();
-    }
-
-    private String resolveContextValue(Query query, String key, String defaultValue) {
-        if (query.context() == null || query.context().isEmpty()) {
-            return defaultValue;
-        }
-        Object raw = query.context().get(key);
-        if (raw instanceof String stringValue && StringUtils.hasText(stringValue)) {
-            return stringValue;
-        }
-        return defaultValue;
     }
 }
