@@ -84,6 +84,7 @@ class RagControllerTest {
                 .andExpect(jsonPath("$.answer").value("Use the official charger."))
                 .andExpect(jsonPath("$.confidence").value(0.85));
 
+        // 核心编排断言：验证预处理 -> 检索 -> 生成 -> 格式化的调用链顺序与入参语义。
         verify(queryPreprocessor).process("How to charge the EV?");
         verify(retrievalService).retrieveAndRerank("how to charge the ev?");
         verify(generationService).generate("How to charge the EV?", documents, "expert", "web");

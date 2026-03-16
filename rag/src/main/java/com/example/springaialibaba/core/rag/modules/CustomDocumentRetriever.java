@@ -62,6 +62,9 @@ public class CustomDocumentRetriever implements DocumentRetriever {
         this.defaultSimilarityThreshold = defaultSimilarityThreshold;
     }
 
+    /**
+     * 统一处理检索参数解析，并保证对外返回非 null 的文档列表。
+     */
     @Override
     public List<Document> retrieve(Query query) {
         log.debug("DocumentRetriever: 检索查询={}", query.text());
@@ -86,11 +89,16 @@ public class CustomDocumentRetriever implements DocumentRetriever {
         return safeResults;
     }
 
+    /**
+     * 过滤表达式优先级：显式传入的 filterExpression > 结构化元数据过滤。
+     * 这样调用方可以按需覆盖默认拼装逻辑。
+     */
     private void applyFilterExpression(SearchRequest.Builder requestBuilder, Map<String, Object> context) {
         if (context == null || context.isEmpty()) {
             return;
         }
 
+        // 先处理调用方显式传入的过滤表达式，命中后不再执行结构化拼装。
         Object filterExpression = context.get(VectorStoreDocumentRetriever.FILTER_EXPRESSION);
         if (filterExpression instanceof Filter.Expression expression) {
             log.debug("DocumentRetriever using pre-built filter expression");
@@ -103,6 +111,7 @@ public class CustomDocumentRetriever implements DocumentRetriever {
             return;
         }
 
+        // 未提供显式表达式时，回退到基于元数据上下文的默认过滤策略。
         // Object filterExpression = context.get(VectorStoreDocumentRetriever.FILTER_EXPRESSION);
         // if (filterExpression instanceof Filter.Expression expression) {
         //     log.debug("DocumentRetriever using pre-built filter expression");
@@ -122,6 +131,9 @@ public class CustomDocumentRetriever implements DocumentRetriever {
         }
     }
 
+    /**
+     * 将固定字段与自定义 filters 统一归一化，并按 AND 关系拼接为表达式。
+     */
     private String buildStructuredFilterExpression(Map<String, Object> context) {
         List<String> clauses = new ArrayList<>();
 
@@ -180,6 +192,9 @@ public class CustomDocumentRetriever implements DocumentRetriever {
         return defaultTopK;
     }
 
+    /**
+     * 相似度阈值优先读取上下文覆盖值（similarityThreshold/score），否则回退默认配置。
+     */
     private double resolveSimilarityThreshold(Map<String, Object> context) {
         if (context == null || context.isEmpty()) {
             return defaultSimilarityThreshold;

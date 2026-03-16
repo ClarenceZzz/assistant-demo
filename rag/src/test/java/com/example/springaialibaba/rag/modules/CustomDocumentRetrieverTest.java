@@ -74,6 +74,7 @@ class CustomDocumentRetrieverTest {
 
     @Test
     void shouldPreferExplicitFilterExpressionOverride() {
+        // 显式 FILTER_EXPRESSION 应覆盖结构化过滤拼装，确保调用方可强制指定策略。
         Query query = Query.builder()
                 .text("question")
                 .context(Map.of(VectorStoreDocumentRetriever.FILTER_EXPRESSION, "type == 'manual'"))
@@ -91,6 +92,7 @@ class CustomDocumentRetrieverTest {
 
     @Test
     void shouldUseDefaultsWhenContextMissing() {
+        // 缺失上下文时，retriever 需回退到构造参数默认值，并返回空列表而非 null。
         Query query = Query.builder().text("question").build();
         when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(null);
 

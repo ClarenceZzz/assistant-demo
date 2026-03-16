@@ -89,6 +89,7 @@ class ModularRagControllerTest {
         verify(requestSpec).user("How to charge the EV?");
         verify(responseFormatter).format("Use the official charger.", documents, 0.85);
 
+        // 通过捕获 advisors 回调，验证 Controller 是否把链路上下文和过滤参数正确注入 AdvisorSpec。
         ArgumentCaptor<Consumer<ChatClient.AdvisorSpec>> advisorCaptor = ArgumentCaptor.forClass(Consumer.class);
         verify(requestSpec).advisors(advisorCaptor.capture());
         ChatClient.AdvisorSpec advisorSpec = mock(ChatClient.AdvisorSpec.class);

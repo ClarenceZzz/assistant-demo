@@ -78,6 +78,9 @@ public class CustomQueryTransformer implements QueryTransformer {
         return query.mutate().text(cleaned).context(context).build();
     }
 
+    /**
+     * 对 metadata 过滤条件做白名单化清洗：空值剔除、日期标准化、自定义 filters 规范化。
+     */
     private void applyMetadataFilters(Map<String, Object> context) {
         putIfHasText(context, RagMetadataFilterContext.DOCUMENT_SOURCE,
                 RagValueUtils.trimToNull(context.get(RagMetadataFilterContext.DOCUMENT_SOURCE)));
@@ -106,6 +109,9 @@ public class CustomQueryTransformer implements QueryTransformer {
         }
     }
 
+    /**
+     * 日期字段仅接受 ISO-8601（yyyy-MM-dd），非法值会被忽略而不是抛错中断流程。
+     */
     private String normaliseDate(Object value, String key) {
         String text = RagValueUtils.trimToNull(value);
         if (!StringUtils.hasText(text)) {
@@ -120,6 +126,9 @@ public class CustomQueryTransformer implements QueryTransformer {
         }
     }
 
+    /**
+     * 自定义 filters 只保留 key/value 都有文本内容的条目，避免污染检索上下文。
+     */
     private Map<String, String> normaliseFilters(Object value) {
         if (!(value instanceof Map<?, ?> rawFilters) || rawFilters.isEmpty()) {
             return Map.of();

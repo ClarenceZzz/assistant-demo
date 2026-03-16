@@ -54,6 +54,7 @@ class SafeRewriteQueryTransformerTest {
 
     @Test
     void shouldFallbackToCleanedQuestionWhenDelegateThrows() {
+        // 改写异常时必须降级到 cleanedQuestion，避免影响后续检索链路稳定性。
         SafeRewriteQueryTransformer transformer = new SafeRewriteQueryTransformer(delegate, true);
         when(delegate.transform(query)).thenThrow(new RuntimeException("rewrite failed"));
 
@@ -78,6 +79,7 @@ class SafeRewriteQueryTransformerTest {
 
     @Test
     void shouldSkipDelegateWhenRewriteDisabled() {
+        // 关闭开关后应短路 delegate，直接复用清洗后的问题。
         SafeRewriteQueryTransformer transformer = new SafeRewriteQueryTransformer(delegate, false);
 
         Query transformed = transformer.transform(query);

@@ -87,6 +87,9 @@ public class ModularRagController {
         return chatResponse.getResult().getOutput().getText();
     }
 
+    /**
+     * 从 Advisor 上下文中提取检索文档，仅保留 Document 类型对象。
+     */
     private List<Document> extractDocuments(Map<String, Object> context) {
         if (context == null || context.isEmpty()) {
             return List.of();
@@ -104,6 +107,9 @@ public class ModularRagController {
         return documents;
     }
 
+    /**
+     * 只透传有文本内容的过滤参数，避免空值进入检索上下文。
+     */
     private void applyMetadataFilterParams(ChatClient.AdvisorSpec advisorSpec, RagQueryRequest request) {
         if (request == null) {
             return;

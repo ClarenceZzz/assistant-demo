@@ -26,6 +26,9 @@ public class SafeRewriteQueryTransformer implements QueryTransformer {
         this.enabled = enabled;
     }
 
+    /**
+     * 改写链路入口：先补齐上下文字段，再根据开关与结果质量决定是否降级。
+     */
     @Override
     public Query transform(Query query) {
         Map<String, Object> context = new LinkedHashMap<>();
@@ -63,6 +66,9 @@ public class SafeRewriteQueryTransformer implements QueryTransformer {
         }
     }
 
+    /**
+     * 降级路径统一写入 rewrittenQuestion，确保后续链路读取到稳定字段。
+     */
     private Query fallback(Query query, Map<String, Object> context, String originalQuestion,
             String cleanedQuestion, String message, boolean logWarn) {
         context.put(RagQueryContext.REWRITTEN_QUESTION, cleanedQuestion);

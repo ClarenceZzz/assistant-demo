@@ -60,6 +60,7 @@ public class CustomQueryAugmenter implements QueryAugmenter {
         String channel = RagValueUtils.resolveContextValuePreserve(query, RagQueryContext.CHANNEL, DEFAULT_CHANNEL);
 
         if (documents.isEmpty()) {
+            // 无检索结果时走统一兜底提示，明确告知信息不足并给出下一步建议。
             String fallback = """
                     你是一名%s，服务渠道是%s。
                     当前知识库中没有与问题直接相关的内容，请明确告知信息不足，并给出下一步建议。
@@ -84,6 +85,9 @@ public class CustomQueryAugmenter implements QueryAugmenter {
         return query.mutate().text(augmentedText).build();
     }
 
+    /**
+     * 使用可追踪的编号格式拼接参考资料，便于回答内容与引用上下文对应。
+     */
     private String buildContext(List<Document> documents) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < documents.size(); i++) {

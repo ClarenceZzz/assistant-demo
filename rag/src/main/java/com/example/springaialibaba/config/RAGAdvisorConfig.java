@@ -88,7 +88,8 @@ public class RAGAdvisorConfig {
             DocumentJoiner documentJoiner,
             DocumentPostProcessor documentPostProcessor, 
             QueryAugmenter queryAugmenter) {
-        
+
+        // 链路顺序与执行阶段一一对应，顺序变化会直接影响最终检索与生成效果。
         return RetrievalAugmentationAdvisor.builder()
             .queryTransformers(queryTransformer, safeRewriteQueryTransformer)
             .queryExpander(queryExpander)
@@ -108,6 +109,7 @@ public class RAGAdvisorConfig {
     }
 
     private PromptTemplate loadPromptTemplate(ResourceLoader resourceLoader, String templateConfig) {
+        // 优先按资源路径加载模板；不存在时退化为直接使用传入文本。
         if (!StringUtils.hasText(templateConfig)) {
             throw new IllegalStateException("RAG 改写 Prompt 模板未配置，请设置 app.rag.rewrite.prompt-template");
         }

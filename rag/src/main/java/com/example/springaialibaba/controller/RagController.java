@@ -95,9 +95,11 @@ public class RagController {
         // 用户提问的渠道
         String channel = RagValueUtils.trimOrDefault(request.getChannel(), DEFAULT_CHANNEL);
 
+        // 生成阶段使用原始问题 + 检索结果 + 角色上下文，保持对用户输入语义的忠实性。
         String answer = generationService.generate(rawQuestion, documents, persona, channel);
         log.info("生成的回答长度={}, 回答={}", answer != null ? answer.length() : 0, answer);
 
+        // confidence 由工具方法按既定元数据顺序提取，缺失时保持 null 兼容历史响应。
         Double topScore = RagValueUtils.extractTopScore(documents, log);
         RagQueryResponse response = responseFormatter.format(answer, documents, topScore);
         // chatHistoryService.saveNewMessage(session.id(), "ASSISTANT", answer,
