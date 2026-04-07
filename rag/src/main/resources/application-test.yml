@@ -24,5 +24,9 @@ prompt:
 
 app:
   rag:
+    routing:
+      enabled: true
+      default-route: PG_VECTOR
+      llm-enabled: false
     rewrite:
       enabled: false

@@ -10,6 +10,7 @@ import com.example.springaialibaba.core.rag.modules.CustomQueryAugmenter;
 import com.example.springaialibaba.core.rag.modules.CustomQueryExpander;
 import com.example.springaialibaba.core.rag.modules.CustomQueryTransformer;
 import com.example.springaialibaba.core.rag.modules.SafeRewriteQueryTransformer;
+import com.example.springaialibaba.core.rag.query.RoutedDocumentQueryService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.openai.OpenAiChatModel;
@@ -21,8 +22,6 @@ import org.springframework.ai.rag.preretrieval.query.transformation.QueryTransfo
 import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
 import org.springframework.ai.rag.retrieval.join.DocumentJoiner;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,11 +54,8 @@ public class RAGAdvisorConfig {
     }
 
     @Bean
-    public DocumentRetriever customDocumentRetriever(
-            VectorStore vectorStore,
-            @Value("${app.retrieval.initial-top-k:20}") int topK,
-            @Value("${app.retrieval.similarity-threshold:0.0}") double similarityThreshold) {
-        return new CustomDocumentRetriever(vectorStore, topK, similarityThreshold);
+    public DocumentRetriever customDocumentRetriever(RoutedDocumentQueryService routedDocumentQueryService) {
+        return new CustomDocumentRetriever(routedDocumentQueryService);
     }
 
     @Bean
@@ -68,9 +64,8 @@ public class RAGAdvisorConfig {
     }
 
     @Bean
-    public DocumentPostProcessor customDocumentPostProcessor(
-            RerankClient rerankClient,
-            @Value("${app.retrieval.final-top-n:5}") int topN) {
+    public DocumentPostProcessor customDocumentPostProcessor(RerankClient rerankClient,
+            @org.springframework.beans.factory.annotation.Value("${app.retrieval.final-top-n:5}") int topN) {
         return new CustomDocumentPostProcessor(rerankClient, topN);
     }
 
@@ -83,21 +78,22 @@ public class RAGAdvisorConfig {
     public RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(
             @Qualifier("customQueryTransformer") QueryTransformer queryTransformer,
             @Qualifier("safeRewriteQueryTransformer") QueryTransformer safeRewriteQueryTransformer,
-            QueryExpander queryExpander, 
-            DocumentRetriever documentRetriever, 
+            @Qualifier("routingQueryTransformer") QueryTransformer routingQueryTransformer,
+            QueryExpander queryExpander,
+            DocumentRetriever documentRetriever,
             DocumentJoiner documentJoiner,
-            DocumentPostProcessor documentPostProcessor, 
+            DocumentPostProcessor documentPostProcessor,
             QueryAugmenter queryAugmenter) {
 
         // 链路顺序与执行阶段一一对应，顺序变化会直接影响最终检索与生成效果。
         return RetrievalAugmentationAdvisor.builder()
-            .queryTransformers(queryTransformer, safeRewriteQueryTransformer)
-            .queryExpander(queryExpander)
-            .documentRetriever(documentRetriever)
-            .documentJoiner(documentJoiner)
-            .documentPostProcessors(documentPostProcessor)
-            .queryAugmenter(queryAugmenter)
-            .build();
+                .queryTransformers(queryTransformer, safeRewriteQueryTransformer, routingQueryTransformer)
+                .queryExpander(queryExpander)
+                .documentRetriever(documentRetriever)
+                .documentJoiner(documentJoiner)
+                .documentPostProcessors(documentPostProcessor)
+                .queryAugmenter(queryAugmenter)
+                .build();
     }
 
     @Bean("ragChatClient")

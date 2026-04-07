@@ -3,6 +3,10 @@ package com.example.springaialibaba.controller;
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
 import com.example.springaialibaba.core.rag.RagQueryContext;
+import com.example.springaialibaba.core.rag.modules.RoutingQueryTransformer;
+import com.example.springaialibaba.core.rag.routing.KeywordQueryRouter;
+import com.example.springaialibaba.core.rag.routing.RouteRequest;
+import com.example.springaialibaba.core.rag.routing.RouterDecision;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import com.example.springaialibaba.utils.RagValueUtils;
@@ -34,16 +38,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class ModularRagController {
 
     private static final Logger log = LoggerFactory.getLogger(ModularRagController.class);
+    private static final String REPAIR_ROUTE_HINT = "repair";
+    private static final List<String> REPAIR_ROUTE_HINT_KEYWORDS =
+            List.of("报修", "故障报修", "维修单", "售后报修");
     private static final String DEFAULT_PERSONA = "客服人员";
     private static final String DEFAULT_CHANNEL = "售后服务";
 
     private final ChatClient chatClient;
     private final ResponseFormatter responseFormatter;
+    private final KeywordQueryRouter keywordQueryRouter;
 
     public ModularRagController(@Qualifier("ragChatClient") ChatClient chatClient,
-            ResponseFormatter responseFormatter) {
+            ResponseFormatter responseFormatter,
+            KeywordQueryRouter keywordQueryRouter) {
         this.chatClient = chatClient;
         this.responseFormatter = responseFormatter;
+        this.keywordQueryRouter = keywordQueryRouter;
     }
 
     @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -62,6 +72,8 @@ public class ModularRagController {
                             .param(RagQueryContext.PERSONA, persona)
                             .param(RagQueryContext.CHANNEL, channel);
                     applyMetadataFilterParams(spec, request);
+                    applyRouteKeyHint(spec, rawQuestion);
+                    applyRouteHint(spec, rawQuestion);
                 })
                 .user(rawQuestion)
                 .call()
@@ -131,6 +143,30 @@ public class ModularRagController {
         });
         if (!sanitizedFilters.isEmpty()) {
             advisorSpec.param(RagMetadataFilterContext.FILTERS, sanitizedFilters);
+        }
+    }
+
+    private void applyRouteKeyHint(ChatClient.AdvisorSpec advisorSpec, String rawQuestion) {
+        RouterDecision routeKeyHintDecision = keywordQueryRouter.route(new RouteRequest(rawQuestion, null));
+        if (routeKeyHintDecision != null && routeKeyHintDecision.hasRoute()) {
+            advisorSpec.param(RoutingQueryTransformer.ROUTE_KEY_HINT_CONTEXT_KEY,
+                    routeKeyHintDecision.getRouteKey().name());
+            log.info("Pre-routing hit: routeKeyHint={}, confidence={}, reason={}",
+                    routeKeyHintDecision.getRouteKey(), routeKeyHintDecision.getConfidence(),
+                    routeKeyHintDecision.getReason());
+        }
+    }
+
+    private void applyRouteHint(ChatClient.AdvisorSpec advisorSpec, String rawQuestion) {
+        if (!StringUtils.hasText(rawQuestion)) {
+            return;
+        }
+        for (String keyword : REPAIR_ROUTE_HINT_KEYWORDS) {
+            if (rawQuestion.contains(keyword)) {
+                advisorSpec.param(RoutingQueryTransformer.ROUTE_HINT_CONTEXT_KEY, REPAIR_ROUTE_HINT);
+                log.info("Business route hint hit: routeHint={}, keyword={}", REPAIR_ROUTE_HINT, keyword);
+                return;
+            }
         }
     }
 

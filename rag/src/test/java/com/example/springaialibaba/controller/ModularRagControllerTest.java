@@ -13,6 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.springaialibaba.core.formatter.ResponseFormatter;
 import com.example.springaialibaba.core.rag.RagMetadataFilterContext;
 import com.example.springaialibaba.core.rag.RagQueryContext;
+import com.example.springaialibaba.core.rag.modules.RoutingQueryTransformer;
+import com.example.springaialibaba.core.rag.routing.KeywordQueryRouter;
+import com.example.springaialibaba.core.rag.routing.RouteKey;
+import com.example.springaialibaba.core.rag.routing.RouteRequest;
+import com.example.springaialibaba.core.rag.routing.RouterDecision;
 import com.example.springaialibaba.model.dto.RagQueryRequest;
 import com.example.springaialibaba.model.dto.RagQueryResponse;
 import com.example.springaialibaba.model.dto.ReferenceDto;
@@ -21,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -52,10 +58,22 @@ class ModularRagControllerTest {
     @MockBean
     private ResponseFormatter responseFormatter;
 
+    @MockBean
+    private KeywordQueryRouter keywordQueryRouter;
+
+    @BeforeEach
+    void setUp() {
+        when(keywordQueryRouter.route(any(RouteRequest.class)))
+                .thenReturn(RouterDecision.unresolved("keyword", "no keyword rule matched"));
+    }
+
     @Test
-    @DisplayName("成功走通 Advisor 链路并透传过滤参数")
+    @DisplayName("成功走通 Advisor 链路并同时透传业务 routeHint 与后端 routeKeyHint")
     void testSuccessfulAdvisorFlow() throws Exception {
-        RagQueryRequest request = new RagQueryRequest("How to charge the EV?", "expert", "web");
+        when(keywordQueryRouter.route(any(RouteRequest.class)))
+                .thenReturn(RouterDecision.resolved(RouteKey.MYSQL, "keyword", "matched keyword", 0.95));
+
+        RagQueryRequest request = new RagQueryRequest("我要提交售后报修单", "expert", "web");
         request.setDocumentSource("faq");
         request.setDocumentType("pdf");
         request.setDateFrom("2025-01-01");
@@ -79,23 +97,22 @@ class ModularRagControllerTest {
 
         mockMvc.perform(post("/api/v1/rag/modular/query")
                         .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(request)))
+                        .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.answer").value("Use the official charger."))
                 .andExpect(jsonPath("$.confidence").value(0.85))
                 .andExpect(jsonPath("$.references[0].title").value("doc-1"))
                 .andExpect(jsonPath("$.references[0].documentId").value("document-123"));
 
-        verify(requestSpec).user("How to charge the EV?");
+        verify(requestSpec).user("我要提交售后报修单");
         verify(responseFormatter).format("Use the official charger.", documents, 0.85);
 
-        // 通过捕获 advisors 回调，验证 Controller 是否把链路上下文和过滤参数正确注入 AdvisorSpec。
         ArgumentCaptor<Consumer<ChatClient.AdvisorSpec>> advisorCaptor = ArgumentCaptor.forClass(Consumer.class);
         verify(requestSpec).advisors(advisorCaptor.capture());
         ChatClient.AdvisorSpec advisorSpec = mock(ChatClient.AdvisorSpec.class);
         when(advisorSpec.param(anyString(), any())).thenReturn(advisorSpec);
         advisorCaptor.getValue().accept(advisorSpec);
-        verify(advisorSpec).param(RagQueryContext.ORIGINAL_QUESTION, "How to charge the EV?");
+        verify(advisorSpec).param(RagQueryContext.ORIGINAL_QUESTION, "我要提交售后报修单");
         verify(advisorSpec).param(RagQueryContext.PERSONA, "expert");
         verify(advisorSpec).param(RagQueryContext.CHANNEL, "web");
         verify(advisorSpec).param(RagMetadataFilterContext.DOCUMENT_SOURCE, "faq");
@@ -103,6 +120,8 @@ class ModularRagControllerTest {
         verify(advisorSpec).param(RagMetadataFilterContext.DATE_FROM, "2025-01-01");
         verify(advisorSpec).param(RagMetadataFilterContext.DATE_TO, "2025-12-31");
         verify(advisorSpec).param(RagMetadataFilterContext.FILTERS, Map.of("region", "cn", "product", "ev"));
+        verify(advisorSpec).param(RoutingQueryTransformer.ROUTE_HINT_CONTEXT_KEY, "repair");
+        verify(advisorSpec).param(RoutingQueryTransformer.ROUTE_KEY_HINT_CONTEXT_KEY, "MYSQL");
     }
 
     @Test
@@ -193,7 +212,7 @@ class ModularRagControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Bad Request"));
 
-        verifyNoInteractions(ragChatClient, responseFormatter);
+        verifyNoInteractions(ragChatClient, responseFormatter, keywordQueryRouter);
     }
 
     private ChatClientResponse buildAdvisorResponse(String answer, List<Document> documents) {

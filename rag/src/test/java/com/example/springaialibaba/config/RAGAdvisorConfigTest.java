@@ -17,10 +17,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 class RAGAdvisorConfigTest {
 
     @Test
-    void shouldRegisterCleansingAndRewriteTransformersInOrder() {
+    void shouldRegisterCleansingRewriteAndRoutingTransformersInOrder() {
         RAGAdvisorConfig config = new RAGAdvisorConfig();
         QueryTransformer cleansingTransformer = mock(QueryTransformer.class);
         QueryTransformer rewriteTransformer = mock(QueryTransformer.class);
+        QueryTransformer routingTransformer = mock(QueryTransformer.class);
         QueryExpander queryExpander = mock(QueryExpander.class);
         DocumentRetriever documentRetriever = mock(DocumentRetriever.class);
         DocumentJoiner documentJoiner = mock(DocumentJoiner.class);
@@ -30,6 +31,7 @@ class RAGAdvisorConfigTest {
         RetrievalAugmentationAdvisor advisor = config.retrievalAugmentationAdvisor(
                 cleansingTransformer,
                 rewriteTransformer,
+                routingTransformer,
                 queryExpander,
                 documentRetriever,
                 documentJoiner,
@@ -40,6 +42,6 @@ class RAGAdvisorConfigTest {
         List<QueryTransformer> queryTransformers =
                 (List<QueryTransformer>) ReflectionTestUtils.getField(advisor, "queryTransformers");
 
-        assertThat(queryTransformers).containsExactly(cleansingTransformer, rewriteTransformer);
+        assertThat(queryTransformers).containsExactly(cleansingTransformer, rewriteTransformer, routingTransformer);
     }
 }

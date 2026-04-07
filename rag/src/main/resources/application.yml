@@ -47,6 +47,10 @@ server:
 
 app:
   rag:
+    routing:
+      enabled: ${APP_RAG_ROUTING_ENABLED:true}
+      default-route: ${APP_RAG_ROUTING_DEFAULT_ROUTE:PG_VECTOR}
+      llm-enabled: ${APP_RAG_ROUTING_LLM_ENABLED:true}
     rewrite:
       enabled: ${APP_RAG_REWRITE_ENABLED:true}
       prompt-template: ${APP_RAG_REWRITE_PROMPT_TEMPLATE:classpath:prompts/rag_rewrite_prompt.txt}
